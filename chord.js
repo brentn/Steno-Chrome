@@ -1,6 +1,6 @@
 function Chord() {
   this.keys = new Set();
-  this.VALID_KEYS = ['#','S-','T-','P-','H-','K-','W-','R-','A-','O-','*','-E','-U','-F','-R','-P','-B','-L','-G','-T','-S','-G','-Z'];
+  this.VALID_KEYS = ['#','S-','T-','P-','H-','K-','W-','R-','A-','O-','*','-E','-U','-F','-R','-P','-B','-L','-G','-T','-S','-D','-Z'];
   
   this.addKey = function(key) {
     if (this.VALID_KEYS.indexOf(key) >= 0) {
