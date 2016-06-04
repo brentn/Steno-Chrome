@@ -1,43 +1,44 @@
 function Dictionary() {
-  var loaded = false;
-  this.dictionary = {};
+  var _loaded = false;
+  var _dictionary = new TernarySearchTrie();
 
   this.load = function(filename) {
     var json;
-    loaded=false;
+    _loaded=false;
     if (filename===null || filename.length===0) {
       console.log("No Dictionary File: Resetting Dictionary");
-      this.dictionary={};
-      loaded=true;
+      _dictionary.empty();
+      _loaded=false;
       return;
     }
     console.log("Loading Dictionary: "+filename);
     loadJSON(filename, function(data) {
       try {
         var json = JSON.parse(data);
-        extend(this.dictionary, json);
+        for (let stroke in json) {
+          if (!json.hasOwnProperty(stroke)) { continue; }
+          _dictionary.add(stroke, json[stroke]);
+        }
         console.log("Dictionary loaded: "+filename);
       } catch(ex) {
-        log.error("Error parsing dictionary file: "+ex);
+        console.error("Error parsing dictionary file: "+ex);
       }
-      loaded=true;
+      _loaded=true;
     });
   };
   
   this.loaded = function() {
-    return loaded;
+    return _loaded;
   };
   
   this.lookup = function(stroke) {
-    return dictionary[stroke];
+    var result = _dictionary.search(stroke);
+    if (result !== null && result.end) {
+      return result.data;
+    }
+    return undefined;
   };
   
-  function extend(a, b){
-    for(var key in b)
-        if(b.hasOwnProperty(key))
-            a[key] = b[key];
-    return a;
-  }
   function loadJSON(filename, callback) {   
 
     var xobj = new XMLHttpRequest();

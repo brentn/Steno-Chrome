@@ -13,6 +13,7 @@
 
   "background": {
     "scripts": [
+      "tst.js",
       "chord.js", 
       "dictionary.js", 
       "translator.js", 
