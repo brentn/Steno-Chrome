@@ -7,4 +7,4 @@ var input = new KeyboardInput();
 var output = new LookupOutput();
 
 output.initialize();
-input.initialize(output.print);
+input.initialize(output.strokeHandler);

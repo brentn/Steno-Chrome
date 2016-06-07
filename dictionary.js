@@ -32,11 +32,15 @@ function Dictionary() {
   };
   
   this.lookup = function(stroke) {
-    var result = _dictionary.search(stroke);
-    if (result !== null && result.end) {
-      return result.data;
+    var result = new LookupResult();
+    var node = _dictionary.search(stroke);
+    if (node !== null && node.end) {
+      result.translation = node.data;
+      result.indeterminate = (_dictionary.search(stroke+'/') !== null);
+    } else {
+      result = undefined;
     }
-    return undefined;
+    return result;
   };
   
   function loadJSON(filename, callback) {   
@@ -52,4 +56,9 @@ function Dictionary() {
     xobj.send(null);  
  }
   
+}
+
+function LookupResult() {
+  indeterminite= false;
+  translation = '';
 }
