@@ -19,6 +19,9 @@ StrokeOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
 
 
 LookupOutput.prototype = Object.create(Output);
+LookupOutput.prototype.constructor = function() {
+  console.log("constructing");
+};
 LookupOutput.prototype.initialize = function() {
   console.log("Initializing Dictionary Lookup output");
   previewSize=0;
@@ -27,19 +30,15 @@ LookupOutput.prototype.initialize = function() {
 };
 
 LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
-  console.log(this.translator);
   var translation = translator.lookup(stroke);
   if (translation !== undefined) {
-    
-    //undo preview
-    chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset": -this.previewSize, "length": this.previewSize}, function() {
-      // send undo_chars
-      chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset": -translation.undo_chars, "length": translation.undo_chars, function() {
-        // send text + preview
-        chrome.input.ime.commitText({"contextID": context_id, "text": translation.text+translation.preview});
-        this.previewSize = translation.preview.length;
-      }});
+    if (translation.undo_chars>0) {
+    chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-translation.undo_chars, "length": translation.undo_chars}, function() {
+      chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
     });
+    } else {
+      chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
+    }
   }
 };
 

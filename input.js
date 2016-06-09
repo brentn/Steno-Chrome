@@ -8,16 +8,11 @@ var TXBoltInput = function(){};
 
 KeyboardInput.prototype = Object.create(Input);
 KeyboardInput.prototype.initialize = function(strokeHandler) {
-  var engine_id = -1;
   var context_id=-1;
   var keys_pressed = new Set();
   var chord = new Chord();
   
   console.log("Initializing Keyboard input");
-  
-  chrome.input.ime.onActivate.addListener(function(engineID) {
-    engine_id = engineID;
-  });
   
   chrome.input.ime.onFocus.addListener(function(context) {
     context_id = context.contextID;
@@ -28,12 +23,10 @@ KeyboardInput.prototype.initialize = function(strokeHandler) {
   });
   
   chrome.input.ime.onKeyEvent.addListener(function(engineID, keyData) {
-    //console.debug("keyData.Type:"+keyData.type+" keyData.code:"+keyData.code);
     if (keyData.type == "keydown") {
       if (! keys_pressed.has(keyData.code)) {
         keys_pressed.add(keyData.code);
         var key = codemap(keyData.code);
-        //console.debug("key: "+keyData.code + " maps to: "+key+" number:"+keys_pressed.size);
         if (key !== undefined) {
           chord.addKey(key);
         }
@@ -45,7 +38,7 @@ KeyboardInput.prototype.initialize = function(strokeHandler) {
         var stroke = chord.toString();
         if (stroke.length > 0) {
           console.log("Stroke:"+stroke);
-          strokeHandler(engine_id, context_id, stroke);
+          strokeHandler(engineID, context_id, stroke);
         } else {
           console.debug("Null stroke");
         }
