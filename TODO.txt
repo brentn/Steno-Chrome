@@ -1,0 +1,26 @@
+Unit Tests:
+
+Options:
+- dictionary file(s)
+- input selector
+- output selector
+
+Translator:
+  if (undo):
+    if (no preview):
+      get preview from history
+    if (preview):
+      undo preview:
+    else (if no preview):
+      **backspace
+  else (if not undo):
+    if (preview+translation found):
+      append translation to preview
+      if (not ambiguous):
+        commit and clear preview
+    else (preview+translation not found):
+      if (preview not empty):
+        commit and clear preview
+        recurse with new translation only
+      else (preview empty):
+        add raw stroke

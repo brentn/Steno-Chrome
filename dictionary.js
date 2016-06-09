@@ -36,7 +36,7 @@ function Dictionary() {
     var node = _dictionary.search(stroke);
     if (node !== null && node.end) {
       result.translation = node.data;
-      result.indeterminate = (_dictionary.search(stroke+'/') !== null);
+      result.ambiguous = (_dictionary.search(stroke+'/') !== null);
     } else {
       result = undefined;
     }
@@ -59,6 +59,6 @@ function Dictionary() {
 }
 
 function LookupResult() {
-  indeterminite= false;
+  ambiguous = false;
   translation = '';
 }
