@@ -13,18 +13,24 @@
 
   "background": {
     "scripts": [
-      "tst.js",
-      "chord.js", 
-      "dictionary.js", 
-      "formatter.js",
-      "translator.js", 
-      "input.js", 
-      "output.js", 
-      "main.js"]
+      "js/tst.js",
+      "js/chord.js", 
+      "js/dictionary.js", 
+      "js/formatter.js",
+      "js/translator.js", 
+      "js/input.js", 
+      "js/output.js", 
+      "js/main.js"]
+  },
+  
+  "options_ui": {
+    "page": "html/options.html",
+    "chrome_style": true
   },
 
   "permissions": [
-    "input"
+    "input",
+    "storage"
   ],
   
   "input_components": [

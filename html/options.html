@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head><title>Steno-Chrome Options</title>
+  <style>
+    body: { padding: 10px; }
+  </style>
+</head>
+<body>
+
+<div>
+  Input device:
+  <div style='padding-left:80px'>
+    <select id="ddlInput">
+      <option value="NKRO">NKRO Keyboard</option>
+    </select>
+  </div>
+</div>
+
+<div>
+  Translator:
+  <div style='padding-left:80px'>
+    <select id="ddlTranslator">
+      <option value="RAW">Raw Strokes</option>
+      <option value="DICTIONARY">Dictionary Lookup</option>
+      <option value="ORTHOGRAPHY">Dictionary Lookup with Orthography</option>
+    </select>
+  </div>
+</div>
+
+<div>
+  Dictionaries:<br/>
+  <div style='padding-left:80px'>
+    <input id="tbDict0" type="text" /><input id='tf0' type='file' style='display:none' onclick='this.value=null;' /><br/>
+    <input id="tbDict1" type="text" /><input id='tf1' type='file' style='display:none' /><br/>
+    <input id="tbDict2" type="text" /><input id='tf2' type='file' style='display:none' /><br/>
+    <input id="tbDict3" type="text" /><input id='tf3' type='file' style='display:none' /><br/>
+  </div>
+</div>
+
+<div>
+  Spaces:
+  <div style='padding-left:80px'>
+    <label>
+      <input type="checkbox" id="cbSpaces">
+      Put spaces BEFORE words?
+    </label>
+  </div>
+</div>
+
+<div>
+  Undo buffer :
+  <div style='padding-left:80px'>
+    <input id="tbUndo" type="number" step="5" style="width:50px"/> strokes
+  </div>
+</div>
+<br/><br/>
+<div id="status"></div>
+<button id="save">Save</button>
+
+<script src="/js/options.js"></script>
+</body>
+</html>

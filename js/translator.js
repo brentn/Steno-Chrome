@@ -1,9 +1,11 @@
 var Translator = {
   initialize : function(){},
-  lookup : function(stroke){}
+  lookup : function(stroke){},
+  reset : function() {}
 };
 
 var DICTIONARY_FILE = 'assets/main.json';
+var HISTORY_SIZE = 40;
 
 var LookupTranslator = function(){};
 
@@ -15,7 +17,7 @@ LookupTranslator.prototype.initialize = function(){
   this.formatter = new SimpleFormatter();
   this.formatter.initialize();
   this.preview = Object.create(TranslationResult);
-  this.history = new History(10);
+  this.history = new History(HISTORY_SIZE);
 };
 
 LookupTranslator.prototype.lookup = function(stroke) {
@@ -45,7 +47,8 @@ LookupTranslator.prototype.lookup = function(stroke) {
       }
     } else {
       //undo by deleting last word
-      console.debug("Undo history is empty.  Removing prior word");
+      console.debug("Undo history is empty.  Removing prior 5 letters");
+      result.undo_chars = 5;
     }
   } else { 
     //translate
@@ -78,6 +81,11 @@ LookupTranslator.prototype.lookup = function(stroke) {
   return result;
 };
 
+LookupTranslator.prototype.reset = function() {
+  this.preview = Object.create(translationResult);
+  this.history.clear();
+};
+
 
 var TranslationResult = {
   stroke:'',
@@ -108,4 +116,8 @@ function History(size) {
     } 
     return Object.create(TranslationResult);
   };
+  this.clear = function() {
+    this.size=0;
+    this.position=-1;
+  }
 }

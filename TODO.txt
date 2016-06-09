@@ -4,7 +4,15 @@ Options:
 - dictionary file(s)
 - input selector
 - output selector
+- space placement
+- undo size
 
+Listener for cursor moved:
+- onSurroundingTextChanged
+
+
+ DONE
+======
 Translator:
   if (undo):
     if (no preview):
