@@ -12,7 +12,7 @@ LookupTranslator.prototype.initialize = function(){
   var self=this;
   this.dictionary = new Dictionary();
   chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
-    self.dictionary.load(items.DICTIONARIES[0]);
+    self.dictionary.load(items.DICTIONARIES[0], null);
     self.history_size = items.UNDO_SIZE;
   });
   this.formatter = new SimpleFormatter();

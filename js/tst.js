@@ -37,6 +37,7 @@ TernarySearchTrie.prototype = {
 
     if (!node){
       node = this._createNode(c);
+      this.entries += 1;
     }
 
     if (!this.root){
@@ -60,7 +61,6 @@ TernarySearchTrie.prototype = {
       } else {
         node.end = true;
         node.data = data;
-        this.entries += 1;
       }
     }
 

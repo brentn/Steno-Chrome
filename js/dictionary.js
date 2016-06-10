@@ -2,7 +2,7 @@ function Dictionary() {
   var _loaded = false;
   var _dictionary = new TernarySearchTrie();
 
-  this.load = function(filename) {
+  this.load = function(filename, callback) {
     var json;
     _loaded=false;
     if (filename===null || filename.length===0) {
@@ -24,11 +24,22 @@ function Dictionary() {
         console.error("Error parsing dictionary file: "+ex);
       }
       _loaded=true;
+      if (callback !== null) {
+        callback();
+      }
     });
+  };
+  
+  this.add = function(stroke, translation) {
+    _dictionary.add(stroke, translation);
   };
   
   this.loaded = function() {
     return _loaded;
+  };
+  
+  this.size = function() {
+    return (_dictionary.length);
   };
   
   this.lookup = function(stroke) {

@@ -1,5 +1,8 @@
 Unit Tests:
-
+- input
+- dictionary
+- translator
+- formatter
 
 Listener for cursor moved:
 - onSurroundingTextChanged

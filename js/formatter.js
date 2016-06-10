@@ -8,7 +8,8 @@ var SimpleFormatter = function() {};
 SimpleFormatter.prototype = Object.create(Formatter);
 SimpleFormatter.prototype.initialize = function() {
   console.log("Initializing formatter");
-  var self=this
+  var self=this;
+  this.state = new State();
   chrome.storage.sync.get({SPACES_BEFORE: false}, function(items) {
     self.spaces_before = items.SPACES_BEFORE;
   });
@@ -22,3 +23,16 @@ SimpleFormatter.prototype.format = function(translation) {
     return translation+' ';
   }
 };
+
+state = function() {
+  this.capitalize=false;
+};
+
+//divide by atoms
+//remove spaces if not atom
+//process .?!
+//process ^
+//process -| & >
+//process glue
+//process literals
+
