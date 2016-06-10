@@ -1,10 +1,19 @@
 console.log("Initializing IME");
 
-var input = new KeyboardInput();
-//var input = new TXBoltInput();
 
-//var output = new StrokeOutput();
-var output = new LookupOutput();
-
-output.initialize();
-input.initialize(output.strokeHandler);
+chrome.storage.sync.get({INPUT_DEVICE:'NKRO', TRANSLATOR_TYPE:'DICTIONARY'}, function(items) {
+  var output;
+  switch(items.TRANSLATOR_TYPE) {
+   case 'RAW': output = new StrokeOutput(); break;
+   case 'DICTIONARY': output = new LookupOutput(); break;
+   case 'ORTHOGRAPHY': output = new LookupOutput(); break;
+  }
+  output.initialize();
+  
+  var input;
+  switch(items.INPUT_DEVICE) {
+    case 'NKRO': input = new KeyboardInput(); break;
+    case 'TXBolt': input = new TXBoltInput(); break;
+  }
+  input.initialize(output.strokeHandler);  
+});

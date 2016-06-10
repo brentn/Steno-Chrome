@@ -4,20 +4,21 @@ var Translator = {
   reset : function() {}
 };
 
-var DICTIONARY_FILE = 'assets/main.json';
-var HISTORY_SIZE = 40;
-
 var LookupTranslator = function(){};
 
 LookupTranslator.prototype = Object.create(Translator);
 LookupTranslator.prototype.initialize = function(){
   console.log("Initializing Lookup translator");
+  var self=this;
   this.dictionary = new Dictionary();
-  this.dictionary.load(DICTIONARY_FILE);
+  chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
+    self.dictionary.load(items.DICTIONARIES[0]);
+    self.history_size = items.UNDO_SIZE;
+  });
   this.formatter = new SimpleFormatter();
   this.formatter.initialize();
   this.preview = Object.create(TranslationResult);
-  this.history = new History(HISTORY_SIZE);
+  this.history = new History(this.history_size);
 };
 
 LookupTranslator.prototype.lookup = function(stroke) {
