@@ -13,12 +13,12 @@ LookupTranslator.prototype.initialize = function(){
   this.dictionary = new Dictionary();
   chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
     self.dictionary.load(items.DICTIONARIES[0], null);
-    self.history_size = items.UNDO_SIZE;
+    self.history = new History(items.UNDO_SIZE);
   });
   this.formatter = new SimpleFormatter();
   this.formatter.initialize();
-  this.preview = Object.create(TranslationResult);
-  this.history = new History(this.history_size);
+  this.state = new State();
+  this.queue = new TranslationResult(this.state);
 };
 
 LookupTranslator.prototype.lookup = function(stroke) {
@@ -26,60 +26,71 @@ LookupTranslator.prototype.lookup = function(stroke) {
     console.warn("The dictionary has not been fully loaded");
     return undefined;
   }
-  var result = Object.create(TranslationResult);
+  var self=this;
   if (stroke=="*") { 
-    //undo
-    if (this.preview.stroke.length===0) {
-      console.debug("Undo: load preview from history");
-      this.preview = this.history.undo();
-    }
-    if (this.preview !== undefined) {
-      console.debug("Undoing "+this.preview.text);
-      result.undo_chars = this.preview.text.length;
-      if (this.preview.stroke.indexOf("/")>-1) { 
-        // preview consists of multiple strokes, so only remove the last stroke
-        this.preview.stroke = this.preview.stroke.substring(0, this.preview.stroke.lastIndexOf('/'));
-        this.preview.text = this.formatter.format(this.dictionary.lookup(this.preview.stroke).translation);
-        result.text = this.preview.text;
-      } else {
-        // preview is only a single stroke, so remove it
-        this.preview = Object.create(TranslationResult);
-        result.text='';
-      }
-    } else {
-      //undo by deleting last word
-      console.debug("Undo history is empty.  Removing prior 5 letters");
-      result.undo_chars = 5;
-    }
+    return undoStroke();
   } else { 
-    //translate
-    var fullStroke = this.preview.stroke + (this.preview.stroke.length>0?"/":"") + stroke;
-    var lookupResult = this.dictionary.lookup(fullStroke);
-    if (lookupResult !== undefined) {
-      this.preview.stroke = fullStroke;
-      this.preview.text = this.formatter.format(lookupResult.translation);
-      result = this.preview;
-      if (! lookupResult.ambiguous) {
-        this.history.add(this.preview);
-        this.preview = Object.create(TranslationResult);
+    return translate(stroke);
+  }
+
+  function translate(stroke) {
+    var result = new TranslationResult(this.state);
+    var dictionaryResult;
+    if (self.queue.isEmpty()) {
+      dictionaryResult = self.dictionary.lookup(stroke);
+      if (dictionaryResult===undefined) {
+        result.stroke = stroke;
+        result.text = stroke;
       }
     } else {
-      // full stroke not found in dictionary
-      console.debug("No translation found for "+fullStroke);
-      if (this.preview.stroke.length === 0) {
-        //add raw stroke
-        this.preview.stroke=stroke;
-        this.preview.text=this.formatter.format(stroke);
-        result=this.preview;
-      }
-      this.history.add(this.preview);
-      this.preview = Object.create(TranslationResult);
-      if (result.stroke.length===0) {
-        result = this.lookup(stroke);
+      var fullstroke = self.queue.stroke + "/" + stroke;
+      dictionaryResult = self.dictionary.lookup(fullstroke);
+      if (dictionaryResult===undefined) {
+        commitQueue();
+        result = translate(stroke); //recurse
+      } else {
+        stroke = fullstroke;
       }
     }
+    if (result.isEmpty()) {
+        result.stroke = stroke;
+        result.text = dictionaryResult.translation;
+    }
+    self.queue=result;
+    if (dictionaryResult===undefined || ! dictionaryResult.ambiguous) {
+      commitQueue();
+    }
+    return result;
   }
-  return result;
+  
+  function undoStroke() {
+    var result = new TranslationResult(null);
+    if (self.queue.isEmpty()) {
+      self.queue = self.history.undo();
+    }
+    if (!self.queue.isEmpty()) {
+      if (self.queue.isCompoundStroke()) {
+        result.undo_chars = self.queue.text.length;
+        self.queue.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
+        self.queue.translation = dictionary.lookup(self.queue.stroke);
+      } else {
+        result.undo_chars = self.queue.text.length;
+        self.queue = new TranslationResult(self.state);
+      }
+      result.state = self.queue.state;
+      result.stroke = self.queue.stroke;
+      result.text = self.queue.text;
+    } else {
+      //no history to undo
+      console.log("no history to undo");
+    }
+    return result;
+  }
+  
+  function commitQueue() {
+    self.history.add(self.queue);
+    self.queue = new TranslationResult(self.state);
+  }
 };
 
 LookupTranslator.prototype.reset = function() {
@@ -88,14 +99,31 @@ LookupTranslator.prototype.reset = function() {
 };
 
 
-var TranslationResult = {
-  stroke:'',
-  text:'',
-  undo_chars:0
+TranslationResult = function(state) {
+  this.state = new State();
+  if (state!==undefined  && state !== null) {
+    this.state.capitalize = state.capitalize;
+    this.state.lowercase = state.lowercase;
+    this.state.start = state.start;
+    this.state.end = state.end;
+    this.state.glue = state.glue;
+  }
+  this.stroke = '';
+  this.text = '';
+  this.undo_chars = 0;
+  this.isEmpty = function() {return this.stroke.length===0;};
+  this.isCompoundStroke = function() {return this.stroke.indexOf('/')>=0;};
 };
 
+State = function() {
+  this.capitalize=false;
+  this.lowercase=false;
+  this.start=false;
+  this.end=false;
+  this.glue=false;
+};
 
-function History(size) {
+History = function(size) {
   this.maxSize = size;
   this.size = 0;
   this.position = -1;
@@ -115,10 +143,10 @@ function History(size) {
       //console.debug("undo history size:"+this.size+" position:"+this.position+" text:"+this.translations[0].text);
       return result;
     } 
-    return Object.create(TranslationResult);
+    return new TranslationResult();
   };
   this.clear = function() {
     this.size=0;
     this.position=-1;
-  }
-}
+  };
+};
