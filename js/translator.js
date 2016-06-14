@@ -94,7 +94,7 @@ LookupTranslator.prototype.lookup = function(stroke) {
 };
 
 LookupTranslator.prototype.reset = function() {
-  this.preview = Object.create(translationResult);
+  this.queue = new TranslationResult(null);
   this.history.clear();
 };
 
@@ -139,11 +139,15 @@ History = function(size) {
       var result = this.translations[this.position];
       this.size--;
       if (this.size===0) {this.position=-1;}
-      else { this.position = (this.position+this.maxSize-1)%this.maxSize; }
+      else { 
+        this.position--;
+        if (this.position<0) 
+          { this.position+=this.maxSize; }
+      }
       //console.debug("undo history size:"+this.size+" position:"+this.position+" text:"+this.translations[0].text);
       return result;
     } 
-    return new TranslationResult();
+    return new TranslationResult(null);
   };
   this.clear = function() {
     this.size=0;
