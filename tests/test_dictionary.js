@@ -81,5 +81,24 @@ describe('dictionary.js tests', function() {
       expect(dictionary.lookup("STROKE").ambiguous).toBe(false);
     });
   });
-
+  // describe('lookup(stroke) from test_dictionary', function() {
+  //   beforeEach(function() {
+  //     dictionary.load(null);
+  //     dictionary.load('test_dictionary.json');
+  //   });
+  //   it('should return undefined when a stroke is not found', function() {
+  //     expect(dictionary.lookup("STROK")).toBe(undefined);
+  //   });
+  //   it('should lookup each word correctly', function() {
+  //     expect(dictionary.lookup("S")).toEqual("is");
+  //     expect(dictionary.lookup("SE")).toEqual("is he");
+  //     expect(dictionary.lookup("SAE")).toEqual("sea");
+  //     expect(dictionary.lookup("SAD")).toEqual("sad");
+  //     expect(dictionary.lookup("SAD/-L")).toEqual("saddle");
+  //     expect(dictionary.lookup("SAD/-L/PWORD")).toEqual("saddleboard");
+  //     expect(dictionary.lookup("TH")).toEqual("this");
+  //     expect(dictionary.lookup("-T")).toEqual("the");
+  //     expect(dictionary.lookup("P-P")).toEqual("{.}");
+  //   });
+  // });
 });
