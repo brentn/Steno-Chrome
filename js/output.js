@@ -35,8 +35,8 @@ LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
     if (translation.commands.length>0) {
       var keyData = [];
       for(var i=0; i<translation.commands.length; i++) {
-        keyData.push(new KeyboardEvent("keydown", {bubbles:true, cancellable:true, key:translation.commands[i]}));
-        keyData.push(new KeyboardEvent("keyup", {bubbles:true, cancellable:true, key:translation.commands[i]}));
+        keyData.push(generateKeyEvent(translation.commands[i]));
+        console.log(keyData);
       }
       chrome.input.ime.sendKeyEvents({"contextID":context_id, "keyData":keyData});
     }
@@ -47,6 +47,20 @@ LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
     } else {
       chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
     }
+  }
+  
+  function generateKeyEvent(command) {
+    var evt = document.createEvent("KeyboardEvent");
+    (evt.initKeyEvent || evt.initKeyboardEvent)("keypress", true, true, window,
+                      0, 0, 0, 0,
+                      keyCode(command), 0);
+    return evt;
+  }
+  
+  function keyCode(command) {
+    var map = {'Return':13,'Left':37,'Up':38,'Right':39,'Down':40};
+    if (map.hasOwnProperty(command)) return map[command];
+    else return 0;
   }
 };
 

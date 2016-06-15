@@ -52,11 +52,11 @@ function set_file(picker) {
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
 
-document.getElementById('tf0').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[0].name;});
-document.getElementById('tf1').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[1].name;});
-document.getElementById('tf2').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[2].name;});
-document.getElementById('tf3').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[3].name;});
-document.getElementById('tbDict0').addEventListener('click', function() {document.getElementById('tf0').click();});
-document.getElementById('tbDict1').addEventListener('click', function() {document.getElementById('tf1').click();});
-document.getElementById('tbDict2').addEventListener('click', function() {document.getElementById('tf2').click();});
-document.getElementById('tbDict3').addEventListener('click', function() {document.getElementById('tf3').click();});
+// document.getElementById('tf0').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[0].name;});
+// document.getElementById('tf1').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[1].name;});
+// document.getElementById('tf2').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[2].name;});
+// document.getElementById('tf3').addEventListener('change', function() {document.getElementById('tbDict0').value=this.files[3].name;});
+// document.getElementById('tbDict0').addEventListener('click', function() {document.getElementById('tf0').click();});
+// document.getElementById('tbDict1').addEventListener('click', function() {document.getElementById('tf1').click();});
+// document.getElementById('tbDict2').addEventListener('click', function() {document.getElementById('tf2').click();});
+// document.getElementById('tbDict3').addEventListener('click', function() {document.getElementById('tf3').click();});

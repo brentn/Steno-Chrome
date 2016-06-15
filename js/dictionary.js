@@ -1,16 +1,16 @@
 function Dictionary() {
   var _loaded = false;
   var _dictionary = new TernarySearchTrie();
+  var self=this;
 
-  this.load = function(filename, callback) {
+  this.load = function(filenames, callback) {
     var json;
     _loaded=false;
-    if (filename===null || filename.length===0) {
-      console.log("No Dictionary File: Resetting Dictionary");
-      _dictionary.empty();
-      _loaded=false;
+    if (filenames===null || filenames.length===0 || filenames[0].trim().length===0) {
+      _loaded=true;
       return;
     }
+    var filename = filenames[0];
     console.log("Loading Dictionary: "+filename);
     loadJSON(filename, function(data) {
       try {
@@ -21,11 +21,16 @@ function Dictionary() {
         }
         console.log("Dictionary loaded: "+filename);
       } catch(ex) {
-        console.error("Error parsing dictionary file: "+ex);
+        console.error("Error parsing dictionary file: "+filename+":"+ex);
       }
+      filenames.shift();
+      if (filenames.length > 0) {
+        self.load(filenames, callback);
+      } else {
       _loaded=true;
-      if (callback !== null) {
-        callback();
+        if (callback !== null) {
+          callback();
+        }
       }
     });
   };
@@ -36,6 +41,11 @@ function Dictionary() {
   
   this.loaded = function() {
     return _loaded;
+  };
+  
+  this.reset = function() {
+      _dictionary.empty();
+      _loaded=false;
   };
   
   this.size = function() {
