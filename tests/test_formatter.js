@@ -68,22 +68,24 @@ describe("formatter.js tests", function() {
     expect(translation.text).toEqual('our Provider ');
     expect(translation.undo_chars).toBe(0);
     expect(translation.state.start).toBe(false);
-    translation.state.start = true;
+    translation.text = "{our Provider^}";
     formatter.format(translation);
-    expect(translation.text).toEqual('our Provider ');
-    expect(translation.undo_chars).toBe(1);
-    expect(translation.state.start).toBe(false);
+    expect(translation.text).toEqual('our Provider');
+    expect(translation.undo_chars).toBe(0);
+    expect(translation.state.end).toBe(true);
 
     formatter.spaces_before = true;
+    translation.state = new State();
+    translation.text = 'our Provider';
     formatter.format(translation);
     expect(translation.text).toEqual(' our Provider');
     expect(translation.undo_chars).toBe(0);
     expect(translation.state.start).toBe(false);
-    translation.state.start = true;
+    translation.text='{^our Provider}';
     formatter.format(translation);
     expect(translation.text).toEqual('our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(translation.state.start).toBe(false);
+    expect(translation.state.start).toBe(true);
   });  
   it('removes end space correctly', function() {
     formatter.spaces_before = false;
@@ -92,18 +94,92 @@ describe("formatter.js tests", function() {
     formatter.format(translation);
     expect(translation.text).toEqual('Jehoveh Jireh ');
     expect(translation.state.end).toBe(false);
-    translation.state.end = true;
+    translation.text = "{Jehoveh Jireh^}";
     formatter.format(translation);
     expect(translation.text).toEqual('Jehoveh Jireh');
-    expect(translation.state.end).toBe(false);
+    expect(translation.state.end).toBe(true);
 
     formatter.spaces_before = true;
+    translation.text = "Jehoveh Jireh";
+    translation.state = new State();
+    formatter.format(translation);
+    expect(translation.text).toEqual(' Jehoveh Jireh');
+    expect(translation.state.end).toBe(false);
+    translation.text = "{Jehoveh Jireh^}";
     formatter.format(translation);
     expect(translation.text).toEqual(' Jehoveh Jireh');
     expect(translation.state.end).toBe(true);
-    translation.state.end = true;
+  });
+  it('sets capitalization flag', function() {
+    translation.text = "Jesus";
     formatter.format(translation);
-    expect(translation.text).toEqual('Jehoveh Jireh');
+    expect(translation.state.capitalize).toBe(false);
+    translation.text = "{-|}";
+    formatter.format(translation);
+    expect(translation.state.capitalize).toBe(true);
+  });
+  it('sets lowercase flag', function() {
+    translation.text = "Jesus";
+    formatter.format(translation);
+    expect(translation.state.lowercase).toBe(false);
+    translation.text = "{>}";
+    formatter.format(translation);
+    expect(translation.state.lowercase).toBe(true);
+  });
+  it('sets glue flag', function() {
+    translation.text = "Jesus";
+    formatter.format(translation);
+    expect(translation.state.glue).toBe(false);
+    translation.text = "{&5}";
+    formatter.format(translation);
+    expect(translation.state.glue).toBe(true);
+  });
+  it('handles glue correctly with preceeding spaces', function() {
+    formatter.spaces_before=true;
+    translation.text = "Jody";
+    formatter.format(translation);
+    expect(translation.text).toEqual(' Jody');
+    translation.state.glue=true;
+    formatter.format(translation);
+    expect(translation.text).toEqual(' Jody');
+    expect(translation.state.glue).toBe(false);
+    translation.state.glue=true;
+    translation.text = "{&Jody}";
+    formatter.format(translation);
+    expect(translation.state.glue).toBe(true);
+    expect(translation.text).toEqual('Jody');
+  });
+  it('handles glue correctly with following spaces', function() {
+    formatter.spaces_before=false;
+    translation.text="Brent";
+    formatter.format(translation);
+    expect(translation.text).toEqual('Brent ');
+    translation.state.glue = true;
+    formatter.format(translation);
+    expect(translation.text).toEqual('Brent ');
+    expect(translation.state.glue).toBe(false);
+    translation.text="{&Brent}";
+    formatter.format(translation);
+    expect(translation.text).toEqual('Brent ');
+    expect(translation.state.glue).toBe(true);
+    translation.text = "{&Brent}";
+    formatter.format(translation);
+    expect(translation.text).toEqual('Brent ');
+    expect(translation.undo_chars).toBe(1);
+    expect(translation.state.glue).toBe(true);
+  });
+  it('handles Return command', function() {
+    translation.text="{#Return}";
+    formatter.format(translation);
+    expect(translation.text.length).toBe(0);
+    expect(translation.undo_chars).toBe(0);
+    expect(translation.commands).toEqual(['Return']);
+  });
+  it('handles more complex commands', function() {
+    translation.text='{^} {#h i space t h e} {#r e}';
+    formatter.format(translation);
+    expect(translation.text.length).toBe(0);
     expect(translation.state.start).toBe(true);
+    expect(translation.commands).toEqual(['h','i','space','t','h','e','r','e']);
   });
 });

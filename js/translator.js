@@ -34,7 +34,7 @@ LookupTranslator.prototype.lookup = function(stroke) {
   }
 
   function translate(stroke) {
-    var result = new TranslationResult(this.state);
+    var result = new TranslationResult(self.state);
     var dictionaryResult;
     if (self.queue.isEmpty()) {
       dictionaryResult = self.dictionary.lookup(stroke);
@@ -47,7 +47,13 @@ LookupTranslator.prototype.lookup = function(stroke) {
       dictionaryResult = self.dictionary.lookup(fullstroke);
       if (dictionaryResult===undefined) {
         commitQueue();
-        result = translate(stroke); //recurse
+        dictionaryResult = self.dictionary.lookup(stroke);
+        result.stroke = stroke;
+        if (dictionaryResult===undefined) {
+          result.text = stroke;
+        } else {
+          result.text = dictionaryResult.translation;
+        }
       } else {
         stroke = fullstroke;
       }
@@ -60,6 +66,8 @@ LookupTranslator.prototype.lookup = function(stroke) {
     if (dictionaryResult===undefined || ! dictionaryResult.ambiguous) {
       commitQueue();
     }
+    self.formatter.format(result);
+    self.state = result.state;
     return result;
   }
   
@@ -110,6 +118,7 @@ TranslationResult = function(state) {
   }
   this.stroke = '';
   this.text = '';
+  this.commands = [];
   this.undo_chars = 0;
   this.isEmpty = function() {return this.stroke.length===0;};
   this.isCompoundStroke = function() {return this.stroke.indexOf('/')>=0;};

@@ -32,6 +32,14 @@ LookupOutput.prototype.initialize = function() {
 LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
   var translation = translator.lookup(stroke);
   if (translation !== undefined) {
+    if (translation.commands.length>0) {
+      var keyData = [];
+      for(var i=0; i<translation.commands.length; i++) {
+        keyData.push(new KeyboardEvent("keydown", {bubbles:true, cancellable:true, key:translation.commands[i]}));
+        keyData.push(new KeyboardEvent("keyup", {bubbles:true, cancellable:true, key:translation.commands[i]}));
+      }
+      chrome.input.ime.sendKeyEvents({"contextID":context_id, "keyData":keyData});
+    }
     if (translation.undo_chars>0) {
     chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-translation.undo_chars, "length": translation.undo_chars}, function() {
       chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
