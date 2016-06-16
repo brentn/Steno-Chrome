@@ -35,11 +35,13 @@ SimpleFormatter.prototype.format = function(translationResult) {
       output += processText(atoms[1], translationResult.state);
     }
   }); 
+  
+  //replace backspaces with undo_chars
   if (output.indexOf('\b')>=0) {
-    //replace backspaces
     translationResult.undo_chars += (output.split('\b').length - 1);
     output = output.replace('\b','');
   }
+  //don't add space if text is empty
   if (output.replace('\n','').replace('\t','').length===0) {
     prefix='';
     suffix='';
