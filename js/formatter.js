@@ -35,14 +35,23 @@ SimpleFormatter.prototype.format = function(translationResult) {
       output += processText(atoms[1], translationResult.state);
     }
   }); 
+  if (output.indexOf('\b')>=0) {
+    //replace backspaces
+    translationResult.undo_chars += (output.split('\b').length - 1);
+    output = output.replace('\b','');
+  }
+  if (output.replace('\n','').replace('\t','').length===0) {
+    prefix='';
+    suffix='';
+  }
   
   if (self.spaces_before) {
     if (endState.start) {prefix = '';}
     if (translationResult.state.glue && endState.glue) {prefix = '';}
   } else {
-    if (endState.start) {translationResult.undo_chars=1;}
+    if (endState.start) {translationResult.undo_chars+=1;}
     if (endState.end) {suffix = '';}
-    if (translationResult.state.glue && endState.glue) {translationResult.undo_chars=1;}
+    if (translationResult.state.glue && endState.glue) {translationResult.undo_chars+=1;}
   }
 
   translationResult.text = prefix + output + suffix;
@@ -66,11 +75,13 @@ function processCommand(atom, translationResult, state) {
     if (atom.indexOf('&')>=0) {state.glue=true; atom=atom.replace('&','');}
   }
   if (atom.indexOf('{#')>=0) {
+    var result = '';
     atom = atom.replace('{#','').replace('}','');
-    translationResult.commands = translationResult.commands.concat(atom.split(' '));
-    atom='';
-    if (self.spaces_before) {state.start=true;}
-    else {state.end=true;}
+    atom.split(' ').forEach(function(item) {
+      if (item.length==1) result += item;
+      else result += getLiteral(item);        
+    });
+    return result;
   }
   atom = atom.replace('{','').replace('}','');
   return atom;
@@ -89,5 +100,16 @@ function processText(atom, priorState) {
 }
 
 
-//process literals
+function getLiteral(command) {
+  var map = {'BackSpace':'\b','Tab':'\t','Return':'\n', space:' '};
+  if (map.hasOwnProperty(command)) return map[command];
+  else return '';
+}
+
+//1zwe94109196726810
+//ups label
+//1.800.742.5877
+
+//order #:201240221
+
 

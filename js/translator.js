@@ -118,7 +118,6 @@ TranslationResult = function(state) {
   }
   this.stroke = '';
   this.text = '';
-  this.commands = [];
   this.undo_chars = 0;
   this.isEmpty = function() {return this.stroke.length===0;};
   this.isCompoundStroke = function() {return this.stroke.indexOf('/')>=0;};

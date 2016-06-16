@@ -10,18 +10,29 @@ describe('dictionary.js tests', function() {
     it('handles missing filename', function() {
       dictionary.load('');
       expect(dictionary.size()).toEqual(0);
-      expect(dictionary.loaded()).toEqual(false);
+      expect(dictionary.loaded()).toEqual(true);
     });
     it('handles null filename', function() {
       dictionary.load(null);
       expect(dictionary.size()).toEqual(0);
-      expect(dictionary.loaded()).toEqual(false);
+      expect(dictionary.loaded()).toEqual(true);
     });
-    it('empties dictionary if null filename', function() {
+    it('does not clear dictionary if null filename', function() {
       dictionary.add("X", "test");
       expect(dictionary.size()).toEqual(1);
       dictionary.load(null);
-      expect(dictionary.size()).toEqual(0);
+      expect(dictionary.size()).toEqual(1);
+    });
+  });
+  describe('reset()', function() {
+    it('clears the dictionary', function() {
+      dictionary.add("x", "testing");
+      dictionary.load(null); //to set loaded
+      expect(dictionary.size()).toBeGreaterThan(0);
+      expect(dictionary.loaded()).toBe(true);
+      dictionary.reset();
+      expect(dictionary.size()).toBe(0);
+      expect(dictionary.loaded()).toBe(false);
     });
   });
   describe('size()', function() {

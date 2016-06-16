@@ -171,15 +171,25 @@ describe("formatter.js tests", function() {
   it('handles Return command', function() {
     translation.text="{#Return}";
     formatter.format(translation);
-    expect(translation.text.length).toBe(0);
     expect(translation.undo_chars).toBe(0);
-    expect(translation.commands).toEqual(['Return']);
+    expect(translation.text).toEqual('\n');
   });
+  it('handles BackSpace command', function() {
+    translation.text="{#BackSpace}";
+    formatter.format(translation);
+    expect(translation.undo_chars).toBe(1);
+    expect(translation.text.length).toBe(0);
+  });
+  it('handles Tab command', function() {
+    translation.text="{#Tab}";
+    formatter.format(translation);
+    expect(translation.undo_chars).toBe(0);
+    expect(translation.text).toEqual('\t');
+  })
   it('handles more complex commands', function() {
     translation.text='{^} {#h i space t h e} {#r e}';
     formatter.format(translation);
-    expect(translation.text.length).toBe(0);
     expect(translation.state.start).toBe(true);
-    expect(translation.commands).toEqual(['h','i','space','t','h','e','r','e']);
+    expect(translation.text).toEqual('hi there');
   });
 });
