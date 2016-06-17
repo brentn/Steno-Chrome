@@ -1,48 +1,37 @@
-Unit Tests:
-- input
-- dictionary
-- translator
-- formatter
+
+Translator tests
 
 Listener for cursor moved:
 - onSurroundingTextChanged
 
-Load multiple dictionaries
-
 Better dictionary choosing gui
 
-Formatter
-- remove space at start
-- remove space at end
-- capitalize
-- lowercase
+
+Translator algorithm:
+if (queue.isEmpty)
+  translateSimpleStroke
+
+else (queue not empty)
+  lookup fullstroke
+  if (found)
+    result.undo_chars = queue.translation.length
+    queue = lookup(fullstroke) + current state
+    format queue
+    result = queue
+    if (not ambiguous)
+      commit queue
+
+  else (not found)
+    commit queue
+    translateSimpleStroke
 
 
- DONE
-======
-Translator:
-  if (undo):
-    if (no preview):
-      get preview from history
-    if (preview):
-      undo preview:
-    else (if no preview):
-      **backspace
-  else (if not undo):
-    if (preview+translation found):
-      append translation to preview
-      if (not ambiguous):
-        commit and clear preview
-    else (preview+translation not found):
-      if (preview not empty):
-        commit and clear preview
-        recurse with new translation only
-      else (preview empty):
-        add raw stroke
-        
-Options:
-- dictionary file(s)
-- input selector
-- output selector
-- space placement
-- undo size
+translateSimpleStroke     
+  queue = lookup(stroke) + current state
+  if (found)
+    format queue
+  else (not found)
+    queue = raw stroke
+  result = queue;
+  if (!found || !ambiguous)
+    commit queue

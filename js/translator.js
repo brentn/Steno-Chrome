@@ -34,40 +34,54 @@ LookupTranslator.prototype.lookup = function(stroke) {
   }
 
   function translate(stroke) {
-    var result = new TranslationResult(self.state);
-    var dictionaryResult;
+    var result;
     if (self.queue.isEmpty()) {
-      dictionaryResult = self.dictionary.lookup(stroke);
-      if (dictionaryResult===undefined) {
-        result.stroke = stroke;
-        result.text = stroke;
-      }
+      result = _translate_simple_stroke(stroke);
     } else {
-      var fullstroke = self.queue.stroke + "/" + stroke;
-      dictionaryResult = self.dictionary.lookup(fullstroke);
-      if (dictionaryResult===undefined) {
-        commitQueue();
-        dictionaryResult = self.dictionary.lookup(stroke);
-        result.stroke = stroke;
-        if (dictionaryResult===undefined) {
-          result.text = stroke;
-        } else {
-          result.text = dictionaryResult.translation;
-        }
+      var fullStroke = self.queue.stroke + '/' + stroke;
+      var lookupResult = self.dictionary.lookup(fullStroke);
+      if (lookupResult !== undefined) {
+        result = new TranslationResult();
+        result.undo_chars = self.queue.text.length;
+        result.stroke = fullStroke;
+        result.text = lookupResult.translation;
+        result.state = self.state;
+        self.formatter.format(result);
+        self.queue.state = result.state;
+        self.queue.stroke = result.stroke;
+        self.queue.text = result.text;
+        self.formatter.format(self.queue);
+        if (!lookupResult.ambiguous)
+          commitQueue();
       } else {
-        stroke = fullstroke;
+        commitQueue();
+        result = _translate_simple_stroke(stroke);
       }
     }
-    if (result.isEmpty()) {
-        result.stroke = stroke;
-        result.text = dictionaryResult.translation;
-    }
-    self.queue=result;
-    if (dictionaryResult===undefined || ! dictionaryResult.ambiguous) {
-      commitQueue();
-    }
-    self.formatter.format(result);
     self.state = result.state;
+    return result;
+  }
+  
+  function _translate_simple_stroke(stroke) {
+    if (!self.queue.isEmpty())
+      throw message || "Queue should always be empty here";
+    var result;
+    var lookupResult;
+    var ambiguous=false;
+
+    self.queue.state = self.state;
+    self.queue.stroke = stroke;
+    lookupResult = self.dictionary.lookup(stroke);
+    if (lookupResult === undefined) {
+      self.queue.text = stroke;
+    } else {
+      self.queue.text = lookupResult.translation;
+      self.formatter.format(self.queue);
+      ambiguous = lookupResult.ambiguous;
+    }
+    result = self.queue;
+    if (!ambiguous)
+      commitQueue();
     return result;
   }
   
@@ -80,7 +94,7 @@ LookupTranslator.prototype.lookup = function(stroke) {
       if (self.queue.isCompoundStroke()) {
         result.undo_chars = self.queue.text.length;
         self.queue.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
-        self.queue.translation = dictionary.lookup(self.queue.stroke);
+        self.queue.translation = self.dictionary.lookup(self.queue.stroke);
       } else {
         result.undo_chars = self.queue.text.length;
         self.queue = new TranslationResult(self.state);
