@@ -140,7 +140,6 @@ History = function(size) {
     if (this.size<this.maxSize) {this.size++;}
     this.position = ((this.position+1)%this.maxSize);
     this.translations[this.position] = translation;
-    //console.debug("history size:"+this.size+" position:"+this.position+" text:"+this.translations[this.position].text);
   };
   this.undo = function() {
     if (this.size>0) {
@@ -152,7 +151,6 @@ History = function(size) {
         if (this.position<0) 
           { this.position+=this.maxSize; }
       }
-      //console.debug("undo history size:"+this.size+" position:"+this.position+" text:"+this.translations[0].text);
       return result;
     } 
     return new TranslationResult(null);

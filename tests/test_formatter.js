@@ -28,19 +28,25 @@ describe("formatter.js tests", function() {
   it('formats punctuation correctly', function() {
     translation.text = "{.}";
     expect(translation.state.capitalize).toBe(false);
+    expect(translation.state.start).toBe(false);
     formatter.format(translation);
     expect(translation.text).toEqual('.  ');
     expect(translation.state.capitalize).toBe(true);
+    expect(translation.state.start).toBe(true);
     translation.text = "{?}";
     translation.state.capitalize=false;
+    translation.state.start=false;
     formatter.format(translation);
     expect(translation.text).toEqual('?  ');
     expect(translation.state.capitalize).toBe(true);
+    expect(translation.state.start).toBe(true);
     translation.text = "{!}";
     translation.state.capitalize=false;
+    translation.state.start=false;
     formatter.format(translation);
     expect(translation.text).toEqual('!  ');
     expect(translation.state.capitalize).toBe(true);
+    expect(translation.state.start).toBe(true);
   });
   it('capitalizes correctly', function() {
     translation.text = "this is it";

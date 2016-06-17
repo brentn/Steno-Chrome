@@ -64,9 +64,9 @@ function processCommand(atom, translationResult, state) {
   atom="{"+atom+"}";
   console.log('command:'+atom);
   switch(atom) {
-    case '{.}': state.capitalize=true; return '. ';
-    case '{?}': state.capitalize=true; return '? ';
-    case '{!}': state.capitalize=true; return '! ';
+    case '{.}': state.start=true; state.capitalize=true; return '. ';
+    case '{?}': state.start=true; state.capitalize=true; return '? ';
+    case '{!}': state.start=true; state.capitalize=true; return '! ';
   }
   if (atom.indexOf('{^')>=0) {state.start=true;}
   if (atom.indexOf('^}')>=0) {state.end=true; atom = atom.replace('^}', '');}
@@ -108,10 +108,6 @@ function getLiteral(command) {
   else return '';
 }
 
-//1zwe94109196726810
-//ups label
-//1.800.742.5877
 
-//order #:201240221
 
 
