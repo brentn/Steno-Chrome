@@ -45,14 +45,12 @@ LookupTranslator.prototype.lookup = function(stroke) {
       if (lookupResult !== undefined) {
         result = new TranslationResult();
         result.undo_chars = self.queue.text.length;
+        self.state = self.queue.state;
         result.stroke = fullStroke;
-        result.text = lookupResult.translation;
-        result.state = self.state;
-        self.formatter.format(result);
-        self.queue.state = result.state;
-        self.queue.stroke = result.stroke;
-        self.queue.text = result.text;
-        self.formatter.format(self.queue);
+        self.queue.stroke = fullStroke;
+        self.queue.text = lookupResult.translation;
+        self.formatter.format(self.queue, self.state);
+        result.text = self.queue.text;
         if (!lookupResult.ambiguous)
           commitQueue();
       } else {
@@ -60,7 +58,6 @@ LookupTranslator.prototype.lookup = function(stroke) {
         result = _translate_simple_stroke(stroke);
       }
     }
-    self.state = result.state;
     return result;
   }
   
@@ -71,14 +68,13 @@ LookupTranslator.prototype.lookup = function(stroke) {
     var lookupResult;
     var ambiguous=false;
 
-    self.queue.state = self.state;
     self.queue.stroke = stroke;
     lookupResult = self.dictionary.lookup(stroke);
     if (lookupResult === undefined) {
       self.queue.text = stroke;
     } else {
       self.queue.text = lookupResult.translation;
-      self.formatter.format(self.queue);
+      self.formatter.format(self.queue, self.state);
       ambiguous = lookupResult.ambiguous;
     }
     result = self.queue;
@@ -93,20 +89,21 @@ LookupTranslator.prototype.lookup = function(stroke) {
       self.queue = self.history.undo();
     }
     if (!self.queue.isEmpty()) {
+      self.state = self.queue.state;
+      result.undo_chars = self.queue.text.length;
       if (self.queue.isCompoundStroke()) {
-        result.undo_chars = self.queue.text.length;
         self.queue.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
-        self.queue.translation = self.dictionary.lookup(self.queue.stroke);
+        self.queue.text = self.dictionary.lookup(self.queue.stroke).translation;
+        self.formatter.format(self.queue, self.state);
       } else {
-        result.undo_chars = self.queue.text.length;
         self.queue = new TranslationResult(self.state);
       }
-      result.state = self.queue.state;
       result.stroke = self.queue.stroke;
       result.text = self.queue.text;
     } else {
       //no history to undo
       console.log("no history to undo");
+      self.state = new State();
     }
     return result;
   }

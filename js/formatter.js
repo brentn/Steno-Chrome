@@ -17,30 +17,30 @@ SimpleFormatter.prototype.initialize = function() {
   }
 };
 
-SimpleFormatter.prototype.format = function(translationResult) {
-  if (translationResult === undefined || translationResult.length===0) return;
+SimpleFormatter.prototype.format = function(translation, state) {
+  if (translation === undefined || translation.length===0) return;
   var self = this;
   var output = '';
-  var endState = new State();
-  var prefix = (self.spaces_before && !translationResult.state.end?' ':'');
+  var prefix = (self.spaces_before && !state.end?' ':'');
   var suffix = (!self.spaces_before?' ':'');
-  var wasGlue = translationResult.state.glue;
+  var wasGlue = state.glue;
+  state.glue=false;
 
-  translationResult.text = "{}"+translationResult.text; //this forces the non-atom part to be at atoms[1] below
+  translation.text = "{}"+translation.text; //this forces the non-atom part to be at atoms[1] below
 
-  translationResult.text.split("{").forEach(function(item) {
+  translation.text.split("{").forEach(function(item) {
     var atoms = item.split('}');
     if (atoms[0].length>0) {
-      output += processCommand(atoms[0], translationResult, endState);
+      output += processCommand(atoms[0], translation, state);
     }
     if (atoms.length>1 && atoms[1].length>0) {
-      output += processText(atoms[1], translationResult.state);
+      output += processText(atoms[1], state);
     }
   }); 
   
   //replace backspaces with undo_chars
   if (output.indexOf('\b')>=0) {
-    translationResult.undo_chars += (output.split('\b').length - 1);
+    translation.undo_chars += (output.split('\b').length - 1);
     output = output.replace('\b','');
   }
   //don't add space if text is empty
@@ -50,19 +50,18 @@ SimpleFormatter.prototype.format = function(translationResult) {
   }
   
   if (self.spaces_before) {
-    if (endState.start) {prefix = '';}
-    if (translationResult.state.glue && endState.glue) {prefix = '';}
+    if (state.start) {prefix = '';}
+    if (wasGlue && state.glue) {prefix = '';}
   } else {
-    if (endState.start) {translationResult.undo_chars+=1;}
-    if (endState.end) {suffix = '';}
-    if (translationResult.state.glue && endState.glue) {translationResult.undo_chars+=1;}
+    if (state.start) {translation.undo_chars+=1;}
+    if (state.end) {suffix = '';}
+    if (wasGlue && state.glue) {translation.undo_chars+=1;}
   }
 
-  translationResult.text = prefix + output + suffix;
-  translationResult.state = endState;
+  translation.text = prefix + output + suffix;
 };
 
-function processCommand(atom, translationResult, state) {
+function processCommand(atom, translation, state) {
   atom="{"+atom+"}";
   console.log('command:'+atom);
   switch(atom) {
@@ -91,12 +90,12 @@ function processCommand(atom, translationResult, state) {
   return atom;
 }
 
-function processText(atom, priorState) {
+function processText(atom, state) {
   console.log('text:'+atom);
   if (atom.indexOf('{')==-1 && atom.indexOf('}')==-1) {
     atom = atom.trim();
-    if (priorState.capitalize && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1);}
-    if (priorState.lowercase && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1);}
+    if (state.capitalize && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.capitalize=false;}
+    if (state.lowercase && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.lowercase=false;}
   } else {
     log.error('ERROR: text shouldnt contain { or } here.');
   }
