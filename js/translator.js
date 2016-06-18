@@ -11,10 +11,12 @@ LookupTranslator.prototype.initialize = function(){
   console.log("Initializing Lookup translator");
   var self=this;
   this.dictionary = new Dictionary();
-  chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
-    self.dictionary.load(items.DICTIONARIES, null);
-    self.history = new History(items.UNDO_SIZE);
-  });
+  try {
+    chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
+      self.dictionary.load(items.DICTIONARIES, null);
+      self.history = new History(items.UNDO_SIZE);
+    });
+  } catch(ex) {}
   this.formatter = new SimpleFormatter();
   this.formatter.initialize();
   this.state = new State();

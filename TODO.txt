@@ -1,12 +1,11 @@
 
-Translator tests
 
 Listener for cursor moved:
 - onSurroundingTextChanged
 
 Better dictionary choosing gui
 
-
+=====================
 Translator algorithm:
 if (queue.isEmpty)
   translateSimpleStroke

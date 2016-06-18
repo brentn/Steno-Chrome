@@ -12,7 +12,9 @@ SimpleFormatter.prototype.initialize = function() {
     chrome.storage.sync.get({SPACES_BEFORE: false}, function(items) {
       this.spaces_before = items.SPACES_BEFORE;
     });
-  } catch(ex) {}
+  } catch(ex) {
+    this.spaces_before=false;
+  }
 };
 
 SimpleFormatter.prototype.format = function(translationResult) {
