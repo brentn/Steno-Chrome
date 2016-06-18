@@ -29,44 +29,44 @@ describe("formatter.js tests", function() {
   });
   it('formats punctuation correctly', function() {
     translation.text = "{.}";
-    expect(state.capitalize).toBe(false);
-    expect(state.start).toBe(false);
+    expect(state.isCapitalized()).toBe(false);
+    expect(state.isInitialSpaceSuppressed()).toBe(false);
     formatter.format(translation, state);
     expect(translation.text).toEqual('.  ');
-    expect(state.capitalize).toBe(true);
-    expect(state.start).toBe(true);
+    expect(state.isCapitalized()).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(true);
     translation.text = "{?}";
-    state.capitalize=false;
-    state.start=false;
+    state.clearCapitalization();
+    state.clearSpaceSuppression();
     formatter.format(translation, state);
     expect(translation.text).toEqual('?  ');
-    expect(state.capitalize).toBe(true);
-    expect(state.start).toBe(true);
+    expect(state.isCapitalized()).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(true);
     translation.text = "{!}";
-    state.capitalize=false;
-    state.start=false;
+    state.clearCapitalization();
+    state.clearSpaceSuppression();
     formatter.format(translation, state);
     expect(translation.text).toEqual('!  ');
-    expect(state.capitalize).toBe(true);
-    expect(state.start).toBe(true);
+    expect(state.isCapitalized()).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(true);
   });
   it('capitalizes correctly', function() {
     translation.text = "this is it";
     formatter.format(translation, state);
     expect(translation.text).toEqual('this is it ');
-    state.capitalize = true;
+    state.capitalize();
     formatter.format(translation, state);
     expect(translation.text).toEqual('This is it ');
-    expect(state.capitalize).toBe(false);
+    expect(state.isCapitalized()).toBe(false);
   });
   it('lowercases correctly', function() {
     translation.text = "This Is It";
     formatter.format(translation, state);
     expect(translation.text).toEqual('This Is It ');
-    state.lowercase = true;
+    state.lowercase();
     formatter.format(translation, state);
     expect(translation.text).toEqual('this Is It ');
-    expect(state.lowercase).toBe(false);
+    expect(state.isLowercase()).toBe(false);
   });
   it('removes start space correctly', function() {
     formatter.spaces_before = false;
@@ -75,12 +75,12 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(translation.text).toEqual('our Provider ');
     expect(translation.undo_chars).toBe(0);
-    expect(state.start).toBe(false);
+    expect(state.isInitialSpaceSuppressed()).toBe(false);
     translation.text = "{our Provider^}";
     formatter.format(translation, state);
     expect(translation.text).toEqual('our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(state.end).toBe(true);
+    expect(state.isFinalSpaceSuppressed()).toBe(true);
 
     formatter.spaces_before = true;
     state = new State();
@@ -88,12 +88,12 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(translation.text).toEqual(' our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(state.start).toBe(false);
+    expect(state.isInitialSpaceSuppressed()).toBe(false);
     translation.text='{^our Provider}';
     formatter.format(translation, state);
     expect(translation.text).toEqual('our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(state.start).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(true);
   });  
   it('removes end space correctly', function() {
     formatter.spaces_before = false;
@@ -101,61 +101,61 @@ describe("formatter.js tests", function() {
     state.end = false;
     formatter.format(translation, state);
     expect(translation.text).toEqual('Jehoveh Jireh ');
-    expect(state.end).toBe(false);
+    expect(state.isFinalSpaceSuppressed()).toBe(false);
     translation.text = "{Jehoveh Jireh^}";
     formatter.format(translation, state);
     expect(translation.text).toEqual('Jehoveh Jireh');
-    expect(state.end).toBe(true);
+    expect(state.isFinalSpaceSuppressed()).toBe(true);
 
     formatter.spaces_before = true;
     translation.text = "Jehoveh Jireh";
     state = new State();
     formatter.format(translation, state);
     expect(translation.text).toEqual(' Jehoveh Jireh');
-    expect(state.end).toBe(false);
+    expect(state.isFinalSpaceSuppressed()).toBe(false);
     translation.text = "{Jehoveh Jireh^}";
     formatter.format(translation, state);
     expect(translation.text).toEqual(' Jehoveh Jireh');
-    expect(state.end).toBe(true);
+    expect(state.isFinalSpaceSuppressed()).toBe(true);
   });
   it('sets capitalization flag', function() {
     translation.text = "Jesus";
     formatter.format(translation, state);
-    expect(state.capitalize).toBe(false);
+    expect(state.isCapitalized()).toBe(false);
     translation.text = "{-|}";
     formatter.format(translation, state);
-    expect(state.capitalize).toBe(true);
+    expect(state.isCapitalized()).toBe(true);
   });
   it('sets lowercase flag', function() {
     translation.text = "Jesus";
     formatter.format(translation, state);
-    expect(state.lowercase).toBe(false);
+    expect(state.isLowercase()).toBe(false);
     translation.text = "{>}";
     formatter.format(translation, state);
-    expect(state.lowercase).toBe(true);
+    expect(state.isLowercase()).toBe(true);
   });
   it('sets glue flag', function() {
     translation.text = "Jesus";
     formatter.format(translation, state);
-    expect(state.glue).toBe(false);
+    expect(state.hasGlue()).toBe(false);
     translation.text = "{&5}";
     formatter.format(translation, state);
-    expect(state.glue).toBe(true);
+    expect(state.hasGlue()).toBe(true);
   });
   it('handles glue correctly with preceeding spaces', function() {
     formatter.spaces_before=true;
     translation.text = "Jody";
-    expect(state.glue).toBe(false);
+    expect(state.hasGlue()).toBe(false);
     formatter.format(translation, state);
     expect(translation.text).toEqual(' Jody');
-    state.glue=true;
+    state.addGlue();
     formatter.format(translation, state);
     expect(translation.text).toEqual(' Jody');
-    expect(state.glue).toBe(false);
-    state.glue=true;
+    expect(state.hasGlue()).toBe(false);
+    state.addGlue();
     translation.text = "{&Jody}";
     formatter.format(translation, state);
-    expect(state.glue).toBe(true);
+    expect(state.hasGlue()).toBe(true);
     expect(translation.text).toEqual('Jody');
   });
   it('handles glue correctly with following spaces', function() {
@@ -166,16 +166,16 @@ describe("formatter.js tests", function() {
     state.glue = true;
     formatter.format(translation, state);
     expect(translation.text).toEqual('Brent ');
-    expect(state.glue).toBe(false);
+    expect(state.hasGlue()).toBe(false);
     translation.text="{&Brent}";
     formatter.format(translation, state);
     expect(translation.text).toEqual('Brent ');
-    expect(state.glue).toBe(true);
+    expect(state.hasGlue()).toBe(true);
     translation.text = "{&Brent}";
     formatter.format(translation, state);
     expect(translation.text).toEqual('Brent ');
     expect(translation.undo_chars).toBe(1);
-    expect(state.glue).toBe(true);
+    expect(state.hasGlue()).toBe(true);
   });
   it('handles Return command', function() {
     translation.text="{#Return}";
@@ -198,7 +198,7 @@ describe("formatter.js tests", function() {
   it('handles more complex commands', function() {
     translation.text='{^} {#h i space t h e} {#r e}';
     formatter.format(translation, state);
-    expect(state.start).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(true);
     expect(translation.text).toEqual('hi there');
   });
 });

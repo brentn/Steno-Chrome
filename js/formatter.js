@@ -21,7 +21,7 @@ SimpleFormatter.prototype.format = function(translation, state) {
   if (translation === undefined || translation.length===0) return;
   var self = this;
   var output = '';
-  var prefix = (self.spaces_before && state.isFinalSpaceSuppressed()?' ':'');
+  var prefix = (self.spaces_before && !state.isFinalSpaceSuppressed()?' ':'');
   var suffix = (!self.spaces_before?' ':'');
   var wasGlue = state.hasGlue();
   state.clearGlue();

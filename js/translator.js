@@ -45,7 +45,7 @@ LookupTranslator.prototype.lookup = function(stroke) {
       if (lookupResult !== undefined) {
         result = new TranslationResult();
         result.undo_chars = self.queue.text.length;
-        self.state = self.queue.state;
+        self.state = new State(self.queue.state);
         result.stroke = fullStroke;
         self.queue.stroke = fullStroke;
         self.queue.text = lookupResult.translation;
@@ -129,23 +129,23 @@ TranslationResult = function(state) {
   this.isCompoundStroke = function() {return this.stroke.indexOf('/')>=0;};
 };
 
-State = function(state) {
+State = function(stateToClone) {
   var _capitalization=0;
   var _space_suppression=0;
   var _glue=false;
-  if (state!==undefined && state!==null) {
-    if (state.isCapitalized) _capitalization=1;
-    if (state.isLowercase) _capitalization=2;
-    if (state.isInitialSpaceSuppressed) _space_suppression|=1;
-    if (state.isFinalSpaceSuppressed) _space_suppression|=2;
-    _glue = state.hasGlue;
+  if (stateToClone!==undefined && stateToClone!==null) {
+    if (stateToClone.isCapitalized()) _capitalization=1;
+    if (stateToClone.isLowercase()) _capitalization=2;
+    if (stateToClone.isInitialSpaceSuppressed()) _space_suppression|=1;
+    if (stateToClone.isFinalSpaceSuppressed()) _space_suppression|=2;
+    _glue = stateToClone.hasGlue();
   }
 
   this.capitalize = function() {_capitalization=1;};
   this.lowercase = function() {_capitalization=2;};
   this.clearCapitalization = function() {_capitalization=0;};
   this.suppressInitialSpace = function() {_space_suppression|=1;};
-  this.suppressFinalSpace = function() {_space_suppresion|=2;};
+  this.suppressFinalSpace = function() {_space_suppression|=2;};
   this.clearSpaceSuppression = function() {_space_suppression=0;};
   this.clearGlue = function() {_glue=false;};
   this.addGlue = function() {_glue=true;};

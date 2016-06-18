@@ -33,6 +33,7 @@ describe('translator.js', function() {
       it('should translate compound strokes', function() {
         translator.lookup('PROB');
         var result = translator.lookup('HREPL');
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
         expect(result.text).toEqual('problem ');
         expect(result.stroke).toEqual('PROB/HREPL');
         expect(result.undo_chars).toBe(9);
@@ -77,7 +78,7 @@ describe('translator.js', function() {
         expect(result.text).toEqual('Stand ');
         result = translator.lookup('*');
         expect(result.undo_chars).toBe(6);
-        expect(translator.state.capitalize).toBe(true);
+        expect(translator.state.isCapitalized()).toBe(true);
         result = translator.lookup('PW');
         expect(result.text).toEqual('About ');
       });
