@@ -121,14 +121,7 @@ LookupTranslator.prototype.reset = function() {
 
 
 TranslationResult = function(state) {
-  this.state = new State();
-  if (state!==undefined  && state !== null) {
-    this.state.capitalize = state.capitalize;
-    this.state.lowercase = state.lowercase;
-    this.state.start = state.start;
-    this.state.end = state.end;
-    this.state.glue = state.glue;
-  }
+  this.state = new State(state);
   this.stroke = '';
   this.text = '';
   this.undo_chars = 0;
@@ -136,12 +129,32 @@ TranslationResult = function(state) {
   this.isCompoundStroke = function() {return this.stroke.indexOf('/')>=0;};
 };
 
-State = function() {
-  this.capitalize=false;
-  this.lowercase=false;
-  this.start=false;
-  this.end=false;
-  this.glue=false;
+State = function(state) {
+  var _capitalization=0;
+  var _space_suppression=0;
+  var _glue=false;
+  if (state!==undefined && state!==null) {
+    if (state.isCapitalized) _capitalization=1;
+    if (state.isLowercase) _capitalization=2;
+    if (state.isInitialSpaceSuppressed) _space_suppression|=1;
+    if (state.isFinalSpaceSuppressed) _space_suppression|=2;
+    _glue = state.hasGlue;
+  }
+
+  this.capitalize = function() {_capitalization=1;};
+  this.lowercase = function() {_capitalization=2;};
+  this.clearCapitalization = function() {_capitalization=0;};
+  this.suppressInitialSpace = function() {_space_suppression|=1;};
+  this.suppressFinalSpace = function() {_space_suppresion|=2;};
+  this.clearSpaceSuppression = function() {_space_suppression=0;};
+  this.clearGlue = function() {_glue=false;};
+  this.addGlue = function() {_glue=true;};
+
+  this.isCapitalized = function() {return _capitalization===1;};
+  this.isLowercase = function() {return _capitalization===2;};
+  this.isInitialSpaceSuppressed = function() {return (_space_suppression&1)!==0;};
+  this.isFinalSpaceSuppressed = function() {return (_space_suppression&2)!==0;};
+  this.hasGlue = function() {return _glue;};
 };
 
 History = function(size) {

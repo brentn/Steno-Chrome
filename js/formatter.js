@@ -21,10 +21,10 @@ SimpleFormatter.prototype.format = function(translation, state) {
   if (translation === undefined || translation.length===0) return;
   var self = this;
   var output = '';
-  var prefix = (self.spaces_before && !state.end?' ':'');
+  var prefix = (self.spaces_before && state.isFinalSpaceSuppressed()?' ':'');
   var suffix = (!self.spaces_before?' ':'');
-  var wasGlue = state.glue;
-  state.glue=false;
+  var wasGlue = state.hasGlue();
+  state.clearGlue();
 
   translation.text = "{}"+translation.text; //this forces the non-atom part to be at atoms[1] below
 
@@ -50,12 +50,12 @@ SimpleFormatter.prototype.format = function(translation, state) {
   }
   
   if (self.spaces_before) {
-    if (state.start) {prefix = '';}
-    if (wasGlue && state.glue) {prefix = '';}
+    if (state.isInitialSpaceSuppressed()) {prefix = '';}
+    if (wasGlue && state.hasGlue()) {prefix = '';}
   } else {
-    if (state.start) {translation.undo_chars+=1;}
-    if (state.end) {suffix = '';}
-    if (wasGlue && state.glue) {translation.undo_chars+=1;}
+    if (state.isInitialSpaceSuppressed()) {translation.undo_chars+=1;}
+    if (state.isFinalSpaceSuppressed()) {suffix = '';}
+    if (wasGlue && state.hasGlue()) {translation.undo_chars+=1;}
   }
 
   translation.text = prefix + output + suffix;
@@ -65,17 +65,17 @@ function processCommand(atom, translation, state) {
   atom="{"+atom+"}";
   console.log('command:'+atom);
   switch(atom) {
-    case '{.}': state.start=true; state.capitalize=true; return '. ';
-    case '{?}': state.start=true; state.capitalize=true; return '? ';
-    case '{!}': state.start=true; state.capitalize=true; return '! ';
+    case '{.}': state.suppressInitialSpace(); state.capitalize(); return '. ';
+    case '{?}': state.suppressInitialSpace(); state.capitalize(); return '? ';
+    case '{!}': state.suppressInitialSpace(); state.capitalize(); return '! ';
   }
-  if (atom.indexOf('{^')>=0) {state.start=true;}
-  if (atom.indexOf('^}')>=0) {state.end=true; atom = atom.replace('^}', '');}
+  if (atom.indexOf('{^')>=0) {state.suppressInitialSpace();}
+  if (atom.indexOf('^}')>=0) {state.suppressFinalSpace(); atom = atom.replace('^}', '');}
   if (atom.indexOf('{^')>=0) {atom = atom.replace('{^','');}
   if (atom.indexOf('{')>=0) {
-    if (atom.indexOf('-|')>=0) {state.capitalize=true; atom = atom.replace('-|','');}
-    if (atom.indexOf('>')>=0) {state.lowercase=true; atom = atom.replace('>','');}
-    if (atom.indexOf('&')>=0) {state.glue=true; atom=atom.replace('&','');}
+    if (atom.indexOf('-|')>=0) {state.capitalize(); atom = atom.replace('-|','');}
+    if (atom.indexOf('>')>=0) {state.lowercase(); atom = atom.replace('>','');}
+    if (atom.indexOf('&')>=0) {state.addGlue(); atom=atom.replace('&','');}
   }
   if (atom.indexOf('{#')>=0) {
     var result = '';
@@ -94,8 +94,8 @@ function processText(atom, state) {
   console.log('text:'+atom);
   if (atom.indexOf('{')==-1 && atom.indexOf('}')==-1) {
     atom = atom.trim();
-    if (state.capitalize && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.capitalize=false;}
-    if (state.lowercase && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.lowercase=false;}
+    if (state.isCapitalized() && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.clearCapitalization();}
+    if (state.isLowercase() && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.clearCapitalization();}
   } else {
     log.error('ERROR: text shouldnt contain { or } here.');
   }
