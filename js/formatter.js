@@ -24,6 +24,10 @@ SimpleFormatter.prototype.format = function(translation, state) {
   var prefix = (self.spaces_before && !state.isFinalSpaceSuppressed()?' ':'');
   var suffix = (!self.spaces_before?' ':'');
   var wasGlue = state.hasGlue();
+  if (self.spaces_before) 
+    state.clearFinalSpaceSuppression();
+  else 
+    state.clearInitialSpaceSuppression();
   state.clearGlue();
 
   translation.text = "{}"+translation.text; //this forces the non-atom part to be at atoms[1] below
@@ -49,17 +53,20 @@ SimpleFormatter.prototype.format = function(translation, state) {
     suffix='';
   }
   
+  //remove spaces if necessary
   if (self.spaces_before) {
-    if (state.isInitialSpaceSuppressed()) {prefix = '';}
+    if (state.isInitialSpaceSuppressed()) {prefix = ''; state.clearInitialSpaceSuppression();}
     if (wasGlue && state.hasGlue()) {prefix = '';}
   } else {
-    if (state.isInitialSpaceSuppressed()) {translation.undo_chars+=1;}
-    if (state.isFinalSpaceSuppressed()) {suffix = '';}
-    if (wasGlue && state.hasGlue()) {translation.undo_chars+=1;}
+    if (state.isFinalSpaceSuppressed()) {suffix = ''; state.clearFinalSpaceSuppression();}
   }
+  if (state.hasTerminalSpace() && state.isInitialSpaceSuppressed()) {state.setTerminalSpace(false); translation.undo_chars+=1;}
+  if (state.hasTerminalSpace() && wasGlue && state.hasGlue()) {state.setTerminalSpace(false); translation.undo_chars+=1;}
 
   translation.text = prefix + output + suffix;
+  state.setTerminalSpace(translation.text.length>0 && translation.text.charAt(translation.text.length-1) == ' ');
 };
+
 
 function processCommand(atom, translation, state) {
   atom="{"+atom+"}";

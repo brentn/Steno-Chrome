@@ -37,14 +37,16 @@ describe("formatter.js tests", function() {
     expect(state.isInitialSpaceSuppressed()).toBe(true);
     translation.text = "{?}";
     state.clearCapitalization();
-    state.clearSpaceSuppression();
+    state.clearInitialSpaceSuppression();
+    state.clearFinalSpaceSuppression();
     formatter.format(translation, state);
     expect(translation.text).toEqual('?  ');
     expect(state.isCapitalized()).toBe(true);
     expect(state.isInitialSpaceSuppressed()).toBe(true);
     translation.text = "{!}";
     state.clearCapitalization();
-    state.clearSpaceSuppression();
+    state.clearInitialSpaceSuppression();
+    state.clearFinalSpaceSuppression();
     formatter.format(translation, state);
     expect(translation.text).toEqual('!  ');
     expect(state.isCapitalized()).toBe(true);
@@ -80,7 +82,7 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(translation.text).toEqual('our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(state.isFinalSpaceSuppressed()).toBe(true);
+    expect(state.isFinalSpaceSuppressed()).toBe(false);
 
     formatter.spaces_before = true;
     state = new State();
@@ -93,7 +95,7 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(translation.text).toEqual('our Provider');
     expect(translation.undo_chars).toBe(0);
-    expect(state.isInitialSpaceSuppressed()).toBe(true);
+    expect(state.isInitialSpaceSuppressed()).toBe(false);
   });  
   it('removes end space correctly', function() {
     formatter.spaces_before = false;
@@ -105,7 +107,7 @@ describe("formatter.js tests", function() {
     translation.text = "{Jehoveh Jireh^}";
     formatter.format(translation, state);
     expect(translation.text).toEqual('Jehoveh Jireh');
-    expect(state.isFinalSpaceSuppressed()).toBe(true);
+    expect(state.isFinalSpaceSuppressed()).toBe(false);
 
     formatter.spaces_before = true;
     translation.text = "Jehoveh Jireh";

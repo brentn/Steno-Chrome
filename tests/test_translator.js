@@ -112,10 +112,34 @@ describe('translator.js', function() {
         result = translator.lookup('*');
         expect(result.undo_chars).toBe(6);
       });
+      it('resets space suppression', function() {
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
+        var result = translator.lookup("{^Love^}");
+        expect(result.text).toEqual("Love");
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(true);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
+        result = translator.lookup("Love");
+        expect(result.text).toEqual("Love ");
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
+      });
     });
     describe('with preceeding spaces', function() {
       beforeEach(function() {
         translator.formatter.spaces_before=true;
+      });
+      it('resets space suppression', function() {
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
+        var result = translator.lookup("{^Love^}");
+        expect(result.text).toEqual("Love");
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(true);
+        result = translator.lookup("Love");
+        expect(result.text).toEqual("Love");
+        expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
+        expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
       });
     });
   });
