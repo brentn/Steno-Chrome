@@ -1,3 +1,5 @@
+var dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
+
 var Translator = {
   initialize : function(){},
   lookup : function(stroke){},
@@ -12,8 +14,13 @@ LookupTranslator.prototype.initialize = function(){
   var self=this;
   this.dictionary = new Dictionary();
   try {
-    chrome.storage.sync.get({DICTIONARIES:['assets/main.json'], UNDO_SIZE:20}, function(items) {
-      self.dictionary.load(items.DICTIONARIES, null);
+    chrome.storage.sync.get({DEFAULT_DICTIONARY:true, UNDO_SIZE:20}, function(items) {
+      if (items.DEFAULT_DICTIONARY) {
+        self.dictionary.load(['assets/dictionary.json'], loadCustomDictionaries);
+      } else {
+        loadCustomDictionaries();
+      }
+
       self.history = new History(items.UNDO_SIZE);
     });
   } catch(ex) {}
@@ -21,6 +28,26 @@ LookupTranslator.prototype.initialize = function(){
   this.formatter.initialize();
   this.state = new State();
   this.queue = new TranslationResult(this.state);
+  
+  function loadCustomDictionaries() {
+    try {
+      chrome.storage.sync.get({CUSTOM_DICTIONARY:true}, function(items) {
+        if (items.CUSTOM_DICTIONARY) {
+          console.debug("Loading custom dictionaries...");
+          chrome.runtime.sendMessage(dictionaryPluginID, {action: "loadDictionaries"}, function(response) {
+            if (response!==undefined && response.status=="OK") {
+              for (var dict in response.dictionaries) {
+                self.dictionary.loadJson(dict.json);
+                console.debug("Loaded custom dictionary: "+dict.name);
+              }
+            } else {
+              console.debug("Custom dictionaries NOT found" + response);
+            }
+          });
+        }
+      });
+    } catch(ex) {}
+  }
 };
 
 LookupTranslator.prototype.lookup = function(stroke) {
@@ -119,6 +146,7 @@ LookupTranslator.prototype.reset = function() {
   this.queue = new TranslationResult(null);
   this.history.clear();
 };
+
 
 
 TranslationResult = function(state) {

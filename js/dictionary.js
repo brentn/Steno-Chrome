@@ -14,11 +14,7 @@ function Dictionary() {
     console.log("Loading Dictionary: "+filename);
     loadJSON(filename, function(data) {
       try {
-        var json = JSON.parse(data);
-        for (let stroke in json) {
-          if (!json.hasOwnProperty(stroke)) { continue; }
-          _dictionary.add(stroke, json[stroke]);
-        }
+        self.loadJson(JSON.parse(data));
         console.log("Dictionary loaded: "+filename);
       } catch(ex) {
         console.error("Error parsing dictionary file: "+filename+":"+ex);
@@ -33,6 +29,13 @@ function Dictionary() {
         }
       }
     });
+  };
+  
+  this.loadJson = function(json) {
+    for (var stroke in json) {
+      if (!json.hasOwnProperty(stroke)) { continue; }
+      _dictionary.add(stroke, json[stroke]);
+    }
   };
   
   this.add = function(stroke, translation) {
