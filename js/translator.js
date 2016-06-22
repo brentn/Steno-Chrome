@@ -36,12 +36,12 @@ LookupTranslator.prototype.initialize = function(){
           console.debug("Loading custom dictionaries...");
           chrome.runtime.sendMessage(dictionaryPluginID, {action: "loadDictionaries"}, function(response) {
             if (response!==undefined && response.status=="OK") {
-              for (var dict in response.dictionaries) {
+              response.dictionaries.forEach(function(dict) {
                 self.dictionary.loadJson(dict.json);
                 console.debug("Loaded custom dictionary: "+dict.name);
-              }
+              });
             } else {
-              console.debug("Custom dictionaries NOT found" + response);
+              console.error("Custom dictionaries NOT found");
             }
           });
         }
