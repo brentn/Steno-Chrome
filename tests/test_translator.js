@@ -100,15 +100,16 @@ describe('translator.js', function() {
         expect(result.undo_chars).toBe(8);
         expect(result.text).toEqual('probable ');
         result = translator.lookup('*');
-        expect(result.undo_chars).toBe(9);
-        expect(result.text).toEqual('');
+        expect(result.undo_chars).toBe(18);
+        expect(result.text).toEqual('probable ');
       });
       it('can undo past a #Return', function() {
         translator.lookup('PW');
         var result = translator.lookup('R-R');
         expect(result.text).toEqual('\n');
         result = translator.lookup('*');
-        expect(result.undo_chars).toBe(1);
+        expect(result.undo_chars).toBe(7);
+        expect(result.text).toEqual('about ');
         result = translator.lookup('*');
         expect(result.undo_chars).toBe(6);
       });
@@ -123,6 +124,16 @@ describe('translator.js', function() {
         expect(result.text).toEqual("Love ");
         expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
         expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
+      });
+      it('allows mistakes in multi-stroke words', function() {
+        expect(translator.lookup('PROB').text).toEqual('probable ');
+        expect(translator.lookup('HROPL').text).toEqual('HROPL ');
+        var result = translator.lookup('*');
+        expect(result.undo_chars).toBe(15);
+        expect(result.text).toEqual('probable ');
+        result = translator.lookup('HREPL');
+        expect(result.undo_chars).toBe(9);
+        expect(result.text).toEqual('problem ');
       });
     });
     describe('with preceeding spaces', function() {

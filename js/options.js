@@ -1,3 +1,5 @@
+var dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
+
 // Saves options to chrome.storage
 function save_options() {
   var input = document.getElementById('ddlInput').value;
@@ -6,7 +8,7 @@ function save_options() {
   var customDictionary = document.getElementById('cbCustomDictionary').checked;
   var space_placement = document.getElementById('cbSpaces').checked;
   var undo_size = document.getElementById('tbUndo').value;
-  
+
   chrome.storage.sync.set({
     INPUT_DEVICE: input,
     TRANSLATOR_TYPE: translator,
@@ -43,12 +45,22 @@ function restore_options() {
     document.getElementById('cbCustomDictionary').checked = items.CUSTOM_DICTIONARY;
     document.getElementById('cbSpaces').checked = items.SPACES_BEFORE;
     document.getElementById('tbUndo').value = items.UNDO_SIZE;
+    enable_dictionary_edit();
   });
+}
+
+function enable_dictionary_edit() {
+  var checked = document.getElementById('cbCustomDictionary').checked;
+  document.getElementById('btnEditCustomDictionaries').disabled = !checked;
 }
 
 
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
+document.getElementById('cbCustomDictionary').addEventListener('click', enable_dictionary_edit);
+document.getElementById('btnEditCustomDictionaries').addEventListener('click', function() {
+  chrome.runtime.sendMessage(dictionaryPluginID, {action: "launch"});
+});
 
 
 

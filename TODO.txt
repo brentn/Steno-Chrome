@@ -35,3 +35,16 @@ translateSimpleStroke
   result = queue;
   if (!found || !ambiguous)
     commit queue
+
+
+Undo algorithm:
+if (queue.isEmpty)
+  undo 1 item from history into queue
+remove one stroke from queue
+backspace over the text
+if queue is not empty
+  push queue onto redo stack
+get up to 2 more items from history 
+  backspace over their translations
+  and push onto the redo stack
+replay the redo stack

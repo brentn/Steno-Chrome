@@ -112,22 +112,43 @@ LookupTranslator.prototype.lookup = function(stroke) {
   }
   
   function undoStroke() {
-    var result = new TranslationResult(null);
+    var result = new TranslationResult();
     if (self.queue.isEmpty()) {
       self.queue = self.history.undo();
     }
     if (!self.queue.isEmpty()) {
+      var redoStack = [];
       self.state = self.queue.state;
       result.undo_chars = self.queue.text.length;
       if (self.queue.isCompoundStroke()) {
         self.queue.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
         self.queue.text = self.dictionary.lookup(self.queue.stroke).translation;
         self.formatter.format(self.queue, self.state);
+        redoStack.push(self.queue);
       } else {
         self.queue = new TranslationResult(self.state);
       }
-      result.stroke = self.queue.stroke;
-      result.text = self.queue.text;
+      if (!self.history.isEmpty()) {
+        var item1 = self.history.undo();
+        result.undo_chars += item1.text.length;
+        self.state = item1.state;
+        redoStack.push(item1);
+      }
+      if (!self.history.isEmpty()) {
+        var item2 = self.history.undo();
+        result.undo_chars += item2.text.length;
+        self.state = item2.state;
+        redoStack.push(item2);
+      }
+      while (redoStack.length > 0) {
+        var item = (self.lookup(redoStack.pop().stroke));
+          if (item!==undefined) {
+          if (item.undo_chars > 0 && result.text.length > item.undo_chars) {
+            result.text = result.text.substr(0, result.text.length-item.undo_chars);
+          }
+          result.text += item.text;
+        }
+      }
     } else {
       //no history to undo
       console.log("no history to undo");
@@ -137,6 +158,7 @@ LookupTranslator.prototype.lookup = function(stroke) {
   }
   
   function commitQueue() {
+    console.debug("QUEUE: "+self.queue.stroke+" "+self.queue.text);
     self.history.add(self.queue);
     self.queue = new TranslationResult(self.state);
   }
@@ -214,6 +236,9 @@ History = function(size) {
       return result;
     } 
     return new TranslationResult(null);
+  };
+  this.isEmpty = function() {
+    return this.size===0;
   };
   this.clear = function() {
     this.size=0;
