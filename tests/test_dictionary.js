@@ -91,25 +91,14 @@ describe('dictionary.js tests', function() {
       expect(dictionary.lookup("STROK/STROK").ambiguous).toBe(false);
       expect(dictionary.lookup("STROKE").ambiguous).toBe(false);
     });
+    it('returns empty string if undefined but ambiguous', function() {
+      dictionary.add('TAL/BOT', 'talbot');
+      dictionary.add('TAL/BET', 'tablet');
+      var result = dictionary.lookup('TAL');
+      expect(result).not.toBe(undefined);
+      expect(result.translation).toBe(undefined);
+      expect(result.ambiguous).toBe(true);
+    });
   });
-  // describe('lookup(stroke) from test_dictionary', function() {
-  //   beforeEach(function() {
-  //     dictionary.load(null);
-  //     dictionary.load('test_dictionary.json');
-  //   });
-  //   it('should return undefined when a stroke is not found', function() {
-  //     expect(dictionary.lookup("STROK")).toBe(undefined);
-  //   });
-  //   it('should lookup each word correctly', function() {
-  //     expect(dictionary.lookup("S")).toEqual("is");
-  //     expect(dictionary.lookup("SE")).toEqual("is he");
-  //     expect(dictionary.lookup("SAE")).toEqual("sea");
-  //     expect(dictionary.lookup("SAD")).toEqual("sad");
-  //     expect(dictionary.lookup("SAD/-L")).toEqual("saddle");
-  //     expect(dictionary.lookup("SAD/-L/PWORD")).toEqual("saddleboard");
-  //     expect(dictionary.lookup("TH")).toEqual("this");
-  //     expect(dictionary.lookup("-T")).toEqual("the");
-  //     expect(dictionary.lookup("P-P")).toEqual("{.}");
-  //   });
-  // });
+
 });

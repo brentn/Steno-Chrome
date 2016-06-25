@@ -48,7 +48,12 @@ KeyboardInput.prototype.initialize = function(strokeHandler) {
     return true; // always comsume the keyboard input
   });
   
+  // chrome.input.ime.onSurroundingTextChanged.addListener(function(engineID, surroundingInfo) {
+  //   //strokeHandler(engineID, context_id, '[RESET]');
+  // });
+  
   chrome.input.ime.onReset.addListener(function(engineID) {
+    strokeHandler(engineID, context_id, '[RESET]');
     context_id=-1;
     keys_pressed.clear();
     chord.clear();

@@ -61,58 +61,89 @@ LookupTranslator.prototype.lookup = function(stroke) {
   } else { 
     return translate(stroke);
   }
-
+  
   function translate(stroke) {
     var result;
+    var lookup;
+    console.warn(stroke)
+    self.state = new State(self.queue.state);
     if (self.queue.isEmpty()) {
-      result = _translate_simple_stroke(stroke);
-    } else {
-      var fullStroke = self.queue.stroke + '/' + stroke;
-      var lookupResult = self.dictionary.lookup(fullStroke);
-      if (lookupResult !== undefined) {
-        result = new TranslationResult();
-        result.undo_chars = self.queue.text.length;
-        self.state = new State(self.queue.state);
-        result.stroke = fullStroke;
-        self.queue.stroke = fullStroke;
-        self.queue.text = lookupResult.translation;
+      self.queue.stroke = stroke;
+      lookup = self.dictionary.lookup(stroke);
+      if (lookup===undefined || lookup.translation===undefined) { //not found
+        self.queue.text = stroke;
+      } else { //found
+        self.queue.text = lookup.translation;
+      }
+      self.formatter.format(self.queue, self.state);
+      result = self.queue;
+      if (lookup===undefined || !lookup.ambiguous) {
+        commitQueue();
+      }
+    } else { //queue not empty
+      var fullstroke = self.queue.stroke + '/' + stroke;
+      result = new TranslationResult(null);
+      result.stroke = fullstroke;
+      result.undo_chars = self.queue.text.length;
+      lookup = self.dictionary.lookup(fullstroke);
+      console.warn(lookup)
+      if (lookup===undefined || lookup.translation===undefined) { //not found
+        if (lookup!==undefined && lookup.ambiguous) {
+          self.queue.stroke = fullstroke;
+          self.queue.text = lookup.translation;
+          self.formatter.format(self.queue, self.state);
+          result.text = self.queue.text;
+        } else { // absolutely not found
+          // Split the queue and commit the longest prefix
+          console.warn(fullstroke)
+          var strokes = fullstroke.split('/');
+          for (var i=strokes.length-1; i > 0; i--) {
+            var substroke = strokes.slice(0, i).join('/');
+            lookup = self.dictionary.lookup(substroke);
+            if (lookup!==undefined && lookup.translation !== undefined) {
+              self.queue.stroke = substroke;
+              self.queue.text = lookup.translation;
+              self.formatter.format(self.queue, self.state);
+              result.text = self.queue.text;
+              commitQueue();
+              self.queue.stroke = strokes.slice(i).join('/');
+              result.stroke = self.queue.stroke;
+              lookup = self.dictionary.lookup(self.queue.stroke);
+              if (lookup===undefined) 
+                self.queue.text = self.queue.stroke;
+              else
+                self.queue.text = lookup.translation;
+              self.formatter.format(self.queue, self.state);
+              result.text += self.queue.text;
+              break;
+            }
+          }
+          if (i===0) {
+            commitQueue();
+            self.queue.stroke = stroke;
+            self.queue.text = stroke;
+            self.formatter.format(self.queue, self.state);
+            result.undo_chars = self.queue.undo_chars;
+            result.text = self.queue.text;
+            commitQueue();
+          }
+        }
+      } else { //found
+        self.queue.stroke = fullstroke;
+        self.queue.text = lookup.translation;
         self.formatter.format(self.queue, self.state);
         result.text = self.queue.text;
-        if (!lookupResult.ambiguous)
-          commitQueue();
-      } else {
+      }
+      if (lookup===undefined || !lookup.ambiguous) {
         commitQueue();
-        result = _translate_simple_stroke(stroke);
       }
     }
-      
     return result;
   }
-  
-  function _translate_simple_stroke(stroke) {
-    if (!self.queue.isEmpty())
-      throw message || "Queue should always be empty here";
-    var result;
-    var lookupResult;
-    var ambiguous=false;
 
-    self.queue.stroke = stroke;
-    lookupResult = self.dictionary.lookup(stroke);
-    if (lookupResult === undefined) {
-      self.queue.text = stroke;
-    } else {
-      self.queue.text = lookupResult.translation;
-      ambiguous = lookupResult.ambiguous;
-    }
-    self.formatter.format(self.queue, self.state);
-    result = self.queue;
-    if (!ambiguous)
-      commitQueue();
-    return result;
-  }
   
   function undoStroke() {
-    var result = new TranslationResult();
+    var result = new TranslationResult(null);
     if (self.queue.isEmpty()) {
       self.queue = self.history.undo();
     }
@@ -121,13 +152,11 @@ LookupTranslator.prototype.lookup = function(stroke) {
       self.state = self.queue.state;
       result.undo_chars = self.queue.text.length;
       if (self.queue.isCompoundStroke()) {
-        self.queue.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
-        self.queue.text = self.dictionary.lookup(self.queue.stroke).translation;
-        self.formatter.format(self.queue, self.state);
-        redoStack.push(self.queue);
-      } else {
-        self.queue = new TranslationResult(self.state);
+        var item0 = new TranslationResult(self.queue.state);
+        item0.stroke = self.queue.stroke.substring(0, self.queue.stroke.lastIndexOf('/'));
+        redoStack.push(item0);
       }
+      self.queue = new TranslationResult(self.state);
       if (!self.history.isEmpty()) {
         var item1 = self.history.undo();
         result.undo_chars += item1.text.length;
@@ -140,13 +169,16 @@ LookupTranslator.prototype.lookup = function(stroke) {
         self.state = item2.state;
         redoStack.push(item2);
       }
-      while (redoStack.length > 0) {
-        var item = (self.lookup(redoStack.pop().stroke));
+      if (redoStack.length>0) {
+        self.state = redoStack[redoStack.length-1].state;
+        while (redoStack.length > 0) {
+          var item = (self.lookup(redoStack.pop().stroke));
           if (item!==undefined) {
-          if (item.undo_chars > 0 && result.text.length > item.undo_chars) {
-            result.text = result.text.substr(0, result.text.length-item.undo_chars);
+            if (item.undo_chars > 0 && result.text.length > item.undo_chars) {
+              result.text = result.text.substr(0, result.text.length-item.undo_chars);
+            }
+            result.text += item.text;
           }
-          result.text += item.text;
         }
       }
     } else {
@@ -158,13 +190,13 @@ LookupTranslator.prototype.lookup = function(stroke) {
   }
   
   function commitQueue() {
-    console.debug("QUEUE: "+self.queue.stroke+" "+self.queue.text);
     self.history.add(self.queue);
     self.queue = new TranslationResult(self.state);
   }
 };
 
 LookupTranslator.prototype.reset = function() {
+  console.log('[RESET]');
   this.queue = new TranslationResult(null);
   this.history.clear();
 };
@@ -219,6 +251,7 @@ History = function(size) {
   this.position = -1;
   this.translations = new Array(this.size);
   this.add = function(translation) {
+    console.debug("ADD: "+translation.stroke+" "+translation.text+" ("+this.size+')');
     if (this.size<this.maxSize) {this.size++;}
     this.position = ((this.position+1)%this.maxSize);
     this.translations[this.position] = translation;
@@ -233,8 +266,10 @@ History = function(size) {
         if (this.position<0) 
           { this.position+=this.maxSize; }
       }
+      console.debug("UNDO: "+result.stroke+" "+result.text);
       return result;
     } 
+    console.debug("Can't UNDO");
     return new TranslationResult(null);
   };
   this.isEmpty = function() {

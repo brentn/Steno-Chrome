@@ -58,9 +58,17 @@ function Dictionary() {
   this.lookup = function(stroke) {
     var result = new LookupResult();
     var node = _dictionary.search(stroke);
-    if (node !== null && node.end) {
-      result.translation = node.data;
+    if (node !== null) {
       result.ambiguous = (_dictionary.search(stroke+'/') !== null);
+      if (node.end) {
+        result.translation = node.data;
+      } else {
+        if (result.ambiguous) {
+          result.translation = undefined;
+        } else {
+          result = undefined;
+        }
+      }
     } else {
       result = undefined;
     }

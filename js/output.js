@@ -30,15 +30,19 @@ LookupOutput.prototype.initialize = function() {
 };
 
 LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
-  var translation = translator.lookup(stroke);
-  if (translation !== undefined) {
-    if (translation.undo_chars>0) {
-      console.debug("BACKSPACE:"+translation.undo_chars);
-      chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-translation.undo_chars, "length": translation.undo_chars}, function() {
+  if (stroke == '[RESET]') {
+    translator.reset();
+  } else {
+    var translation = translator.lookup(stroke);
+    if (translation !== undefined) {
+      if (translation.undo_chars>0) {
+        console.debug("BACKSPACE:"+translation.undo_chars);
+        chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-translation.undo_chars, "length": translation.undo_chars}, function() {
+          chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
+        });
+      } else {
         chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
-      });
-    } else {
-      chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
+      }
     }
   }
   

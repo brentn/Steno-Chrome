@@ -1,10 +1,8 @@
 no space after multistroke word
 need to reset space suppression
 
-Listener for cursor moved:
-- onSurroundingTextChanged
+is queue getting output??
 
-Better dictionary choosing gui
 
 =====================
 Translator algorithm:

@@ -25,6 +25,7 @@ describe('translator.js', function() {
       it('should translate simple strokes', function() {
         expect(translator.lookup('PW').text).toEqual('about ');
         expect(translator.lookup('PROB').text).toEqual('probable ');
+        translator.queue = new TranslationResult(null);
         expect(translator.lookup('STAPBD').text).toEqual('stand ');
       });
       it('should translate command strokes', function() {
@@ -100,8 +101,8 @@ describe('translator.js', function() {
         expect(result.undo_chars).toBe(8);
         expect(result.text).toEqual('probable ');
         result = translator.lookup('*');
-        expect(result.undo_chars).toBe(18);
-        expect(result.text).toEqual('probable ');
+        expect(result.undo_chars).toBe(9);
+        expect(result.text).toEqual('');
       });
       it('can undo past a #Return', function() {
         translator.lookup('PW');
@@ -126,14 +127,40 @@ describe('translator.js', function() {
         expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
       });
       it('allows mistakes in multi-stroke words', function() {
-        expect(translator.lookup('PROB').text).toEqual('probable ');
-        expect(translator.lookup('HROPL').text).toEqual('HROPL ');
-        var result = translator.lookup('*');
+        var result = translator.lookup('PROB');
+        expect(result.text).toEqual('probable ');
+        result = translator.lookup('HROPL');
+        expect(result.undo_chars).toBe(9);
+        expect(result.text).toEqual('probable HROPL ');
+        result = translator.lookup('*');
         expect(result.undo_chars).toBe(15);
         expect(result.text).toEqual('probable ');
         result = translator.lookup('HREPL');
         expect(result.undo_chars).toBe(9);
         expect(result.text).toEqual('problem ');
+      });
+      it('allows mistakes in multi-stroke words with no common root', function() {
+        translator.dictionary.add('TAL/BOT', 'talbot');
+        translator.dictionary.add('TAL/BET', 'tablet');
+        expect(translator.dictionary.lookup('TAL')).not.toBe(undefined);
+        var result = translator.lookup('TAL');
+        expect(result.text).toEqual('TAL ');
+        expect(result.undo_chars).toBe(0);
+        result = translator.lookup('BOT');
+        expect(result.text).toEqual('talbot ');
+        expect(result.undo_chars).toBe(4);
+        result = translator.lookup('*');
+        expect(result.text).toEqual('TAL ');
+        expect(result.undo_chars).toBe(7);
+        result = translator.lookup('BAT');
+        expect(result.text).toEqual('BAT ');
+        expect(result.undo_chars).toBe(0);
+        result = translator.lookup('*');
+        expect(result.text).toEqual('TAL ');
+        expect(result.undo_chars).toBe(8);
+        result = translator.lookup('BET');
+        expect(result.text).toEqual('tablet ');
+        expect(result.undo_chars).toBe(4);
       });
     });
     describe('with preceeding spaces', function() {
@@ -152,6 +179,21 @@ describe('translator.js', function() {
         expect(translator.state.isInitialSpaceSuppressed()).toBe(false);
         expect(translator.state.isFinalSpaceSuppressed()).toBe(false);
       });
+    });
+    it('clears the queue on reset', function() {
+      expect(translator.queue.stroke).toEqual('');
+      translator.lookup("PROB");
+      expect(translator.queue.stroke).toEqual('PROB');
+      translator.reset();
+      expect(translator.queue.stroke).toEqual('');
+    });
+    it('clears history on reset', function() {
+      expect(translator.history.isEmpty()).toBe(true);
+      translator.lookup("PW");
+      expect(translator.queue.stroke).toEqual('');
+      expect(translator.history.isEmpty()).toBe(false);
+      translator.reset();
+      expect(translator.history.isEmpty()).toBe(true);
     });
   });
 });
