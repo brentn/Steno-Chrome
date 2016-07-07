@@ -30,9 +30,8 @@ SimpleFormatter.prototype.format = function(translation, state) {
     state.clearInitialSpaceSuppression();
   state.clearGlue();
 
-  translation.text = "{}"+translation.text; //this forces the non-atom part to be at atoms[1] below
-
-  translation.text.split("{").forEach(function(item) {
+  var backspaces=0;
+  ('{}' + translation.output.pop()).split("{").forEach(function(item) {
     var atoms = item.split('}');
     if (atoms[0].length>0) {
       output += processCommand(atoms[0], translation, state);
@@ -42,9 +41,9 @@ SimpleFormatter.prototype.format = function(translation, state) {
     }
   }); 
   
-  //replace backspaces with undo_chars
+  //replace backspaces with backspaces
   if (output.indexOf('\b')>=0) {
-    translation.undo_chars += (output.split('\b').length - 1);
+    backspaces += (output.split('\b').length - 1);
     output = output.replace('\b','');
   }
   //don't add space if text is empty
@@ -60,17 +59,28 @@ SimpleFormatter.prototype.format = function(translation, state) {
   } else {
     if (state.isFinalSpaceSuppressed()) {suffix = ''; state.clearFinalSpaceSuppression();}
   }
-  if (state.hasTerminalSpace() && state.isInitialSpaceSuppressed()) {state.setTerminalSpace(false); translation.undo_chars+=1;}
-  if (state.hasTerminalSpace() && wasGlue && state.hasGlue()) {state.setTerminalSpace(false); translation.undo_chars+=1;}
+  if (state.hasTerminalSpace() && state.isInitialSpaceSuppressed()) {state.setTerminalSpace(false); backspaces+=1;}
+  if (state.hasTerminalSpace() && wasGlue && state.hasGlue()) {state.setTerminalSpace(false); backspaces+=1;}
 
-  translation.text = prefix + output + suffix;
-  state.setTerminalSpace(translation.text.length>0 && translation.text.charAt(translation.text.length-1) == ' ');
+  translation.undo=[];
+  var out = prefix+output+suffix;
+  if (backspaces>0) {
+    translation.output.push(Array(backspaces+1).join('\b'));
+  }
+  if (out.length>0) {
+    translation.output.push(out);
+    translation.undo.push(Array(out.length+1).join('\b')); //TODO: undo should really replace what was there before
+  }
+  if (backspaces>0) {
+    translation.undo.push(Array(backspaces+1).join(' '));
+  }
+  state.setTerminalSpace(out.length>0 && out.charAt(out.length-1) == ' ');
 };
 
 
 function processCommand(atom, translation, state) {
   atom="{"+atom+"}";
-  console.log('command:'+atom);
+  console.debug('command:'+atom);
   switch(atom) {
     case '{.}': state.suppressInitialSpace(); state.capitalize(); return '. ';
     case '{?}': state.suppressInitialSpace(); state.capitalize(); return '? ';
@@ -98,13 +108,13 @@ function processCommand(atom, translation, state) {
 }
 
 function processText(atom, state) {
-  console.log('text:'+atom);
+  console.debug('text:'+atom);
   if (atom.indexOf('{')==-1 && atom.indexOf('}')==-1) {
     atom = atom.trim();
     if (state.isCapitalized() && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.clearCapitalization();}
     if (state.isLowercase() && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.clearCapitalization();}
   } else {
-    log.error('ERROR: text shouldnt contain { or } here.');
+    console.error('ERROR: text shouldnt contain { or } here.');
   }
   return atom;
 }

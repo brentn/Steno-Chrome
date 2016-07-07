@@ -33,18 +33,18 @@ LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
   if (stroke == '[RESET]') {
     translator.reset();
   } else {
-    var translation = translator.lookup(stroke);
-    if (translation !== undefined) {
-      if (translation.undo_chars>0) {
-        console.debug("BACKSPACE:"+translation.undo_chars);
-        chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-translation.undo_chars, "length": translation.undo_chars}, function() {
-          chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
-        });
-      } else {
-        chrome.input.ime.commitText({"contextID": context_id, "text": translation.text});
+    var output = translator.lookup(stroke);
+    if (output !== undefined) {
+      for (var i=0; i < output.length; i++) {
+        var translation = output[i];
+        if (translation.length>0 && translation[0] == '\b') {
+          var num = translation.split('\b').length-1;
+          chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-num, "length": num});
+        } else {
+          chrome.input.ime.commitText({"contextID": context_id, "text": translation});
+        }
       }
     }
   }
-  
 };
 

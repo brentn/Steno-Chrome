@@ -18,6 +18,7 @@
       "js/tst.js",
       "js/chord.js", 
       "js/dictionary.js", 
+      "js/state.js",
       "js/formatter.js",
       "js/translator.js", 
       "js/input.js", 

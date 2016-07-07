@@ -46,3 +46,15 @@ get up to 2 more items from history
   backspace over their translations
   and push onto the redo stack
 replay the redo stack
+
+======================
+rework of algorithm
+
+output: list of either number of backspaces, or text
+data: state, stroke, outputs, undos 
+
+
+Formatter: format - static (formats the output and undo queues)
+
+
+
