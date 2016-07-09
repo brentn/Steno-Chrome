@@ -5,8 +5,8 @@ chrome.storage.sync.get({INPUT_DEVICE:'NKRO', TRANSLATOR_TYPE:'DICTIONARY'}, fun
   var output;
   switch(items.TRANSLATOR_TYPE) {
    case 'RAW': output = new StrokeOutput(); break;
-   case 'DICTIONARY': output = new LookupOutput(); break;
-   case 'ORTHOGRAPHY': output = new LookupOutput(); break;
+   case 'SIMPLE': output = new SimpleOutput(); break;
+   case 'FULL': output = new LookupOutput(); break;
   }
   output.initialize();
   
