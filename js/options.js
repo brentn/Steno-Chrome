@@ -17,12 +17,15 @@ function save_options() {
     SPACES_BEFORE: space_placement,
     UNDO_SIZE: undo_size 
   }, function() {
+    // reload IME
+    chrome.extension.getBackgroundPage().window.location.reload();
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
     status.textContent = 'Options saved.';
     setTimeout(function() {
       status.textContent = '';
     }, 750);
+    window.close();
   });
 }
 
@@ -32,7 +35,7 @@ function restore_options() {
   // Use default value color = 'red' and likesColor = true.
   chrome.storage.sync.get({
     INPUT_DEVICE: 'NKRO',
-    TRANSLATOR_TYPE: 'DICTIONARY',
+    TRANSLATOR_TYPE: 'FULL',
     DEFAULT_DICTIONARY: true,
     CUSTOM_DICTIONARY: false,
     DICTIONARIES: [],

@@ -8,8 +8,10 @@ var TXBoltInput = function(){};
 
 KeyboardInput.prototype = Object.create(Input);
 KeyboardInput.prototype.initialize = function(strokeHandler) {
+  var CONTROL_KEYS = ['ShiftLeft', 'ShiftRight', 'ControlLeft', 'ControlRight', 'Space'];
   var context_id=-1;
   var keys_pressed = new Set();
+  var control_keys_pressed = '';
   var chord = new Chord();
   
   console.log("Initializing Keyboard input");
@@ -45,7 +47,8 @@ KeyboardInput.prototype.initialize = function(strokeHandler) {
         chord.clear();
       }
     }
-    return true; // always comsume the keyboard input
+    if (CONTROL_KEYS.indexOf(keyData.code)>=0) return false; // pass through CONTROL_KEYS
+    else return true; // comsume all other keyboard input
   });
   
   // chrome.input.ime.onSurroundingTextChanged.addListener(function(engineID, surroundingInfo) {

@@ -14,8 +14,9 @@ SimpleTranslator.prototype.initialize = function() {
   console.log("Initializing Simple translator");
   var self=this;
   try {
-    chrome.storage.sync.get({UNDO_SIZE:20}, function(items) {
+    chrome.storage.sync.get({UNDO_SIZE:20,SPACES_BEFORE:false}, function(items) {
       self._history = new History(items.UNDO_SIZE);
+      self._spaces_before = items.SPACES_BEFORE;
     });
   } catch(ex) {}
   this._dictionary = new Dictionary();
@@ -45,6 +46,8 @@ SimpleTranslator.prototype.lookup = function(stroke) {
       if (lookupResult!==undefined) { //lookupresult was found
         console.debug('lookup found: '+lookupResult.translation);
         this._queue.output = [(lookupResult.translation===undefined?stroke:lookupResult.translation)];
+        addSpace();
+        calculateUndo();
         result = result.concat(this._queue.output);
         if (! lookupResult.ambiguous) { //not ambiguous
           console.debug('lookup not ambiguous');
@@ -53,6 +56,8 @@ SimpleTranslator.prototype.lookup = function(stroke) {
       } else { // (lookupresult not found)
         console.debug('lookup not found');
         this._queue.output = [stroke];
+        addSpace();
+        calculateUndo();
         result = result.concat(this._queue.output);
         commitQueue();
       }
@@ -70,7 +75,8 @@ SimpleTranslator.prototype.lookup = function(stroke) {
           var lookup2 = this._dictionary.lookup(stroke);
           this._queue.output.push(lookup2===undefined||lookup2.translation===undefined?stroke:lookup2.translation);
         }
-        this._queue.undo = [];
+        addSpace();
+        calculateUndo();
         result = result.concat(this._queue.output);
         if (! lookupResult.ambiguous) { //not ambiguous
           console.debug('fullstroke not ambiguous');
@@ -86,11 +92,20 @@ SimpleTranslator.prototype.lookup = function(stroke) {
   }
   return result;
   
-  function commitQueue() {
+  function addSpace() {
+    if (self._spaces_before) self._queue.output[self._queue.output.length-1] = ' ' + self._queue.output[self._queue.output.length-1] ;
+    else self._queue.output[self._queue.output.length-1] += ' ';
+  }
+
+  function calculateUndo() {
     self._queue.undo = [];
     for (var i=0; i<self._queue.output.length; i++) {
       self._queue.undo.unshift(Array(self._queue.output[i].length+1).join('\b'));
     }
+  }
+
+  
+  function commitQueue() {
     self._history.push(self._queue);
     self._queue = new TranslationResult();
   }  

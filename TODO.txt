@@ -1,6 +1,10 @@
 adding suffixes sometimes puts the backspace before the word, rather than the suffix
 comma leaves space before.
 
+ctrl-shift-space should switch back to regular keyboard
+
+options page needs to link to dictionary extension if not installed
+
 ======================
 rework of algorithm
 
