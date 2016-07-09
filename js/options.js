@@ -1,4 +1,5 @@
-var dictionaryPluginID = 'neplnmhbihffcipeceghknmcelidhnjc'; //'calecfmgglplmbamkalpndodmpomgnll';
+var dictionaryPluginID = 'neplnmhbihffcipeceghknmcelidhnjc'; 
+//dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
 
 // Saves options to chrome.storage
 function save_options() {
@@ -52,18 +53,35 @@ function restore_options() {
   });
 }
 
+function show_custom_dictionary() {
+  document.getElementById('btnInstallDictionaryPlugin').style.display='none';
+  document.getElementById('pnlCustomDictionary').style.display='block';
+}
+
 function enable_dictionary_edit() {
   var checked = document.getElementById('cbCustomDictionary').checked;
   document.getElementById('btnEditCustomDictionaries').disabled = !checked;
 }
 
-
+chrome.runtime.sendMessage(dictionaryPluginID, {action: "version"}, function(response) {
+  if (response!==undefined && response.length > 0) {
+    console.debug('Custom dictionary plugin found');
+    show_custom_dictionary();
+  } else {
+    console.debug("Custom dictionary plugin NOT found");
+  }
+});
 document.addEventListener('DOMContentLoaded', restore_options);
 document.getElementById('save').addEventListener('click', save_options);
+document.getElementById('btnInstallDictionaryPlugin').addEventListener('click', function() {
+  window.open('https://chrome.google.com/webstore/detail/'+dictionaryPluginID);
+  show_custom_dictionary();
+});
 document.getElementById('cbCustomDictionary').addEventListener('click', enable_dictionary_edit);
 document.getElementById('btnEditCustomDictionaries').addEventListener('click', function() {
   chrome.runtime.sendMessage(dictionaryPluginID, {action: "launch"});
 });
+document.getElementById('lblVersion').innerHTML=chrome.app.getDetails().version_name;
 
 
 

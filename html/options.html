@@ -6,7 +6,10 @@
   </style>
 </head>
 <body>
-  
+
+<div>
+  <span style='float:right; margin-top:-10px; font-size:x-small; color:darkgrey'>version:<span id='lblVersion'>0</span></span>
+</div>  
 <div>
   To Enable:
   <div style='padding-left:80px; text-style:italic'>
@@ -41,15 +44,22 @@
 <div>
   Dictionaries:<br/>
   <div style='padding-left:80px'>
-    <label>
-      <input type="checkbox" id="cbDefaultDictionary">
-      Use default dictionary?
-    </label><br/>
-    <label>
-      <input type="checkbox" id="cbCustomDictionary">
-      Use custom dictionaries?
-    </label>
-    <button id='btnEditCustomDictionaries'>Edit Dictionaries...</button>
+    <div>
+      <label>
+        <input type="checkbox" id="cbDefaultDictionary">
+        Use default dictionary?
+      </label>
+    </div><br/>
+    <div>
+      <input type="button" id="btnInstallDictionaryPlugin" value="Allow Personal Dictionaries?"/>
+    </div>
+    <div id='pnlCustomDictionary' style='display:none'>
+      <label>
+        <input type="checkbox" id="cbCustomDictionary">
+        Use personal dictionaries?
+      </label>
+      <button id='btnEditCustomDictionaries'>Edit Dictionaries...</button>
+    </div>
   </div>
 </div>
 

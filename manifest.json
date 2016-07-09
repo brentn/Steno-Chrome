@@ -4,8 +4,8 @@
   "short_name": "StenoKeyboard",
   "description": "Chorded input for Chromebooks",
   "author": "Brent Nesbitt",
-  "version": "0.0.5",
-  "version_name": "v0.0 pre-release-5",
+  "version": "0.0.7",
+  "version_name": "v0.0 pre-release-7",
   "minimum_chrome_version": "38",
 
   "icons": {
@@ -33,8 +33,7 @@
 
   "permissions": [
     "input",
-    "storage",
-    "file://*/*"
+    "storage"
   ],
   
   "input_components": [
