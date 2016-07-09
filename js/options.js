@@ -1,4 +1,4 @@
-var dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
+var dictionaryPluginID = 'neplnmhbihffcipeceghknmcelidhnjc'; //'calecfmgglplmbamkalpndodmpomgnll';
 
 // Saves options to chrome.storage
 function save_options() {

@@ -1,9 +1,11 @@
 adding suffixes sometimes puts the backspace before the word, rather than the suffix
 comma leaves space before.
 
-ctrl-shift-space should switch back to regular keyboard
+space passthrough should be prevented if no control key pressed
 
 options page needs to link to dictionary extension if not installed
+
+Dictionary plugin options page should close on save, and cause this to reload, if possible
 
 ======================
 rework of algorithm
