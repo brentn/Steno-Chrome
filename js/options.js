@@ -1,6 +1,3 @@
-var dictionaryPluginID = 'neplnmhbihffcipeceghknmcelidhnjc'; 
-//dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
-
 // Saves options to chrome.storage
 function save_options() {
   var input = document.getElementById('ddlInput').value;
@@ -71,8 +68,11 @@ chrome.runtime.sendMessage(dictionaryPluginID, {action: "version"}, function(res
     console.debug("Custom dictionary plugin NOT found");
   }
 });
-document.addEventListener('DOMContentLoaded', restore_options);
-document.getElementById('save').addEventListener('click', save_options);
+chrome.runtime.onMessageExternal.addListener(function(request, sender, sendResponse) {
+  if (request.action == 'reload') {
+    chrome.extension.getBackgroundPage().window.location.reload();
+  }
+});
 document.getElementById('btnInstallDictionaryPlugin').addEventListener('click', function() {
   window.open('https://chrome.google.com/webstore/detail/'+dictionaryPluginID);
   show_custom_dictionary();
@@ -81,6 +81,9 @@ document.getElementById('cbCustomDictionary').addEventListener('click', enable_d
 document.getElementById('btnEditCustomDictionaries').addEventListener('click', function() {
   chrome.runtime.sendMessage(dictionaryPluginID, {action: "launch"});
 });
+
+document.addEventListener('DOMContentLoaded', restore_options);
+document.getElementById('save').addEventListener('click', save_options);
 document.getElementById('lblVersion').innerHTML=chrome.app.getDetails().version_name;
 
 

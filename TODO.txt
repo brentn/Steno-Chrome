@@ -3,8 +3,6 @@ comma leaves space before.
 
 space passthrough should be prevented if no control key pressed
 
-options page needs to link to dictionary extension if not installed
-
 Dictionary plugin options page should close on save, and cause this to reload, if possible
 
 ======================

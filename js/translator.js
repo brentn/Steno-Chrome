@@ -1,5 +1,3 @@
-var dictionaryPluginID = 'calecfmgglplmbamkalpndodmpomgnll';
-
 var Translator = {
   initialize : function(){},
   lookup : function(stroke){},

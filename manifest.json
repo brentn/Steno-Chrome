@@ -15,6 +15,7 @@
 
   "background": {
     "scripts": [
+      "js/plugins.js",
       "js/tst.js",
       "js/chord.js", 
       "js/dictionary.js", 
