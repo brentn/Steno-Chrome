@@ -18,113 +18,166 @@ SimpleFormatter.prototype.initialize = function() {
 };
 
 SimpleFormatter.prototype.format = function(translation, state) {
-  if (translation === undefined || translation.length===0) return;
-  var self = this;
-  var output = '';
-  var prefix = (self.spaces_before && !state.isFinalSpaceSuppressed()?' ':'');
-  var suffix = (!self.spaces_before?' ':'');
-  var wasGlue = state.hasGlue();
-  if (self.spaces_before) 
-    state.clearFinalSpaceSuppression();
-  else 
-    state.clearInitialSpaceSuppression();
-  state.clearGlue();
+  if (translation === undefined || translation.output === undefined) return;
+  var self=this;
+  var result = {
+    output:[], 
+    undo:[]
+  };
+  while (translation.output.length > 0) {
+    var text = translation.output.shift();
+    var output = processAtoms(text);
+    var undo = generateUndo(output);
+    result.output = result.output.concat(output);
+    result.undo = undo.concat(result.undo); //build the undo string in reverse
+  }
+  translation.output = result.output;
+  translation.undo = result.undo;
 
-  var backspaces=0;
-  ('{}' + translation.output.pop()).split("{").forEach(function(item) {
-    var atoms = item.split('}');
-    if (atoms[0].length>0) {
-      output += processCommand(atoms[0], translation, state);
-    }
-    if (atoms.length>1 && atoms[1].length>0) {
-      output += processText(atoms[1], state);
-    }
-  }); 
+  function processAtoms(text) {
+    var vars = {
+      hadGlue:state.hasGlue(),
+      backspaces:0,
+      prefix:(self.spaces_before && !state.isFinalSpaceSuppressed()?' ':''),
+      text:'',
+      suffix:(!self.spaces_before?' ':'')
+    };
+    initializeState();
+    ('{}'+text).split('{').forEach(function(item) {
+      var atoms = item.split('}');
+      if (atoms[0].length>0) {
+        vars.text += processCommand(atoms[0]);
+      }
+      if (atoms.length>1 && atoms[1].length>0) {
+        vars.text += processText(atoms[1]);
+      }
+    });
+    backspaces = getBackspaces(vars);
+    removeSpacesIfNoText(vars);
+    stickWordsTogether(vars);
+    return generateResult(vars);
+  }
   
-  //replace backspaces with backspaces
-  if (output.indexOf('\b')>=0) {
-    backspaces += (output.split('\b').length - 1);
-    output = output.replace('\b','');
-  }
-  //don't add space if text is empty
-  if (output.replace('\n','').replace('\t','').length===0) {
-    prefix='';
-    suffix='';
+  function initializeState() {
+    if (self.spaces_before) state.clearFinalSpaceSuppression();
+    else state.clearInitialSpaceSuppression();
+    state.clearGlue();
   }
   
-  //remove spaces if necessary
-  if (self.spaces_before) {
-    if (state.isInitialSpaceSuppressed()) {prefix = ''; state.clearInitialSpaceSuppression();}
-    if (wasGlue && state.hasGlue()) {prefix = '';}
-  } else {
-    if (state.isFinalSpaceSuppressed()) {suffix = ''; state.clearFinalSpaceSuppression();}
+  function processCommand(atom) {
+    atom="{"+atom+"}";
+    console.debug('command:'+atom);
+    switch(atom) {
+      case '{.}': state.suppressInitialSpace(); state.capitalize(); return '. ';
+      case '{?}': state.suppressInitialSpace(); state.capitalize(); return '? ';
+      case '{!}': state.suppressInitialSpace(); state.capitalize(); return '! ';
+    }
+    if (atom.indexOf('{^')>=0) {state.suppressInitialSpace();}
+    if (atom.indexOf('^}')>=0) {state.suppressFinalSpace(); atom = atom.replace('^}', '');}
+    if (atom.indexOf('{^')>=0) {atom = atom.replace('{^','');}
+    if (atom.indexOf('{')>=0) {
+      if (atom.indexOf('-|')>=0) {state.capitalize(); atom = atom.replace('-|','');}
+      if (atom.indexOf('>')>=0) {state.lowercase(); atom = atom.replace('>','');}
+      if (atom.indexOf('&')>=0) {state.addGlue(); atom=atom.replace('&','');}
+    }
+    if (atom.indexOf('{#')>=0) {
+      var result = '';
+      atom = atom.replace('{#','').replace('}','');
+      atom.split(' ').forEach(function(item) {
+        if (item.length==1) result += item;
+        else result += getLiteral(item);        
+      });
+      return result;
+    }
+    atom = atom.replace('{','').replace('}','');
+    return atom;
   }
-  if (state.hasTerminalSpace() && state.isInitialSpaceSuppressed()) {state.setTerminalSpace(false); backspaces+=1;}
-  if (state.hasTerminalSpace() && wasGlue && state.hasGlue()) {state.setTerminalSpace(false); backspaces+=1;}
 
-  translation.undo=[];
-  var out = prefix+output+suffix;
-  if (backspaces>0) {
-    translation.output.push(Array(backspaces+1).join('\b'));
+  function processText(atom) {
+    console.debug('text:'+atom);
+    if (atom.indexOf('{')==-1 && atom.indexOf('}')==-1) {
+      atom = atom.trim();
+      if (state.isCapitalized() && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.clearCapitalization();}
+      if (state.isLowercase() && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.clearCapitalization();}
+    } else {
+      console.error('ERROR: text shouldnt contain { or } here.');
+    }
+    return atom;
   }
-  if (out.length>0) {
-    translation.output.push(out);
-    translation.undo.push(Array(out.length+1).join('\b')); //TODO: undo should really replace what was there before
+
+  function getLiteral(command) {
+    var map = {'BackSpace':'\b','Tab':'\t','Return':'\n', space:' '};
+    if (map.hasOwnProperty(command)) return map[command];
+    else return '';
   }
-  if (backspaces>0) {
-    translation.undo.push(Array(backspaces+1).join(' '));
+  
+  function getBackspaces(parameters) {
+    if (parameters.text.indexOf('\b')>=0) {
+      parameters.backspaces = parameters.text.split('\b').length-1;
+      parameters.text = parameters.text.split('\b').join('');
+    } else {
+      parameters.backspaces = 0;
+    }
   }
-  state.setTerminalSpace(out.length>0 && out.charAt(out.length-1) == ' ');
+  
+  function removeSpacesIfNoText(parameters) {
+    if (parameters.text.replace('\n','').replace('\t','').length===0) {
+      parameters.prefix='';
+      parameters.suffix='';
+    }
+  }
+  
+  function stickWordsTogether(parameters) {
+    if (self.spaces_before) {
+      if (state.isInitialSpaceSuppressed()) {
+        parameters.prefix = '';
+        state.clearInitialSpaceSuppression();
+      } 
+      if (parameters.hadGlue && state.hasGlue()) {
+        parameters.prefix = '';
+      }
+    } else { // spaces after
+      if (state.isFinalSpaceSuppressed()) {
+        parameters.suffix = '';
+        state.clearFinalSpaceSuppression();
+      }
+    }
+    if (state.hasTerminalSpace() && state.isInitialSpaceSuppressed()) {
+      parameters.backspaces += 1;
+    }
+    if (state.hasTerminalSpace() && parameters.hadGlue && state.hasGlue()) {
+      parameters.backspaces += 1;
+    }
+  }
+
+  function generateResult(parameters) {
+    var result=[];
+    out = parameters.prefix+parameters.text+parameters.suffix;
+    if ((out).length===0) 
+      result = [];
+    else 
+      result = [out];
+    if (parameters.backspaces>0) 
+    result.unshift(Array(parameters.backspaces+1).join('\b'));
+    return result;
+  }
+  
+  function generateUndo(textList) {
+    var result = [];
+    for(var i=0; i<textList.length; i++) {
+      var item = textList[i];
+      if (item.indexOf('\b')>=0) {
+        result.unshift(state.getOutput(item.length));
+      } else {
+        result.unshift(Array(item.length+1).join('\b'));
+      }
+    }
+    return result;
+  }
+
 };
 
 
-function processCommand(atom, translation, state) {
-  atom="{"+atom+"}";
-  console.debug('command:'+atom);
-  switch(atom) {
-    case '{.}': state.suppressInitialSpace(); state.capitalize(); return '. ';
-    case '{?}': state.suppressInitialSpace(); state.capitalize(); return '? ';
-    case '{!}': state.suppressInitialSpace(); state.capitalize(); return '! ';
-  }
-  if (atom.indexOf('{^')>=0) {state.suppressInitialSpace();}
-  if (atom.indexOf('^}')>=0) {state.suppressFinalSpace(); atom = atom.replace('^}', '');}
-  if (atom.indexOf('{^')>=0) {atom = atom.replace('{^','');}
-  if (atom.indexOf('{')>=0) {
-    if (atom.indexOf('-|')>=0) {state.capitalize(); atom = atom.replace('-|','');}
-    if (atom.indexOf('>')>=0) {state.lowercase(); atom = atom.replace('>','');}
-    if (atom.indexOf('&')>=0) {state.addGlue(); atom=atom.replace('&','');}
-  }
-  if (atom.indexOf('{#')>=0) {
-    var result = '';
-    atom = atom.replace('{#','').replace('}','');
-    atom.split(' ').forEach(function(item) {
-      if (item.length==1) result += item;
-      else result += getLiteral(item);        
-    });
-    return result;
-  }
-  atom = atom.replace('{','').replace('}','');
-  return atom;
-}
-
-function processText(atom, state) {
-  console.debug('text:'+atom);
-  if (atom.indexOf('{')==-1 && atom.indexOf('}')==-1) {
-    atom = atom.trim();
-    if (state.isCapitalized() && atom.length>1) {atom = atom.charAt(0).toUpperCase() + atom.slice(1); state.clearCapitalization();}
-    if (state.isLowercase() && atom.length>1) {atom = atom.charAt(0).toLowerCase() + atom.slice(1); state.clearCapitalization();}
-  } else {
-    console.error('ERROR: text shouldnt contain { or } here.');
-  }
-  return atom;
-}
-
-
-function getLiteral(command) {
-  var map = {'BackSpace':'\b','Tab':'\t','Return':'\n', space:' '};
-  if (map.hasOwnProperty(command)) return map[command];
-  else return '';
-}
 
 
 

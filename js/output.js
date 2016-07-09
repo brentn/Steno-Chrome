@@ -39,8 +39,10 @@ LookupOutput.prototype.strokeHandler = function(engine_id, context_id, stroke) {
         var translation = output[i];
         if (translation.length>0 && translation[0] == '\b') {
           var num = translation.split('\b').length-1;
-          chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-num, "length": num});
+          console.debug('deleting '+num+' chars');
+          chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-(num), "length": num}, null);
         } else {
+          console.debug('printing "'+translation+'"');
           chrome.input.ime.commitText({"contextID": context_id, "text": translation});
         }
       }

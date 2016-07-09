@@ -1,51 +1,5 @@
-no space after multistroke word
-need to reset space suppression
-
-is queue getting output??
-
-
-=====================
-Translator algorithm:
-if (queue.isEmpty)
-  translateSimpleStroke
-
-else (queue not empty)
-  lookup fullstroke
-  if (found)
-    result.undo_chars = queue.translation.length
-    queue = lookup(fullstroke) + current state
-    format queue
-    result = queue
-    if (not ambiguous)
-      commit queue
-
-  else (not found)
-    commit queue
-    translateSimpleStroke
-
-
-translateSimpleStroke     
-  queue = lookup(stroke) + current state
-  if (found)
-    format queue
-  else (not found)
-    queue = raw stroke
-  result = queue;
-  if (!found || !ambiguous)
-    commit queue
-
-
-Undo algorithm:
-if (queue.isEmpty)
-  undo 1 item from history into queue
-remove one stroke from queue
-backspace over the text
-if queue is not empty
-  push queue onto redo stack
-get up to 2 more items from history 
-  backspace over their translations
-  and push onto the redo stack
-replay the redo stack
+adding suffixes sometimes puts the backspace before the word, rather than the suffix
+comma leaves space before.
 
 ======================
 rework of algorithm

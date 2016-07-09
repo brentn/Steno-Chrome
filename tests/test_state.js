@@ -111,10 +111,41 @@ describe('state.js tests', function() {
     });
     it('sets terminal space', function() {
       expect(state.hasTerminalSpace()).toBe(false);
-      state.setTerminalSpace(true);
+      state.appendOutput([' ']);
       expect(state.hasTerminalSpace()).toBe(true);
-      state.setTerminalSpace(false);
+      state.appendOutput(['abc d']);
       expect(state.hasTerminalSpace()).toBe(false);
+      state.appendOutput(['\b']);
+      expect(state.hasTerminalSpace()).toBe(true);
+    });
+  });
+  describe('output', function() {
+    var state;
+    beforeEach(function() {
+      state = new State();
+    });
+    it('saves simple output correctly', function() {
+      expect(state.getOutput(1)).toEqual('');
+      state.appendOutput(['abc']);
+      expect(state.getOutput(1)).toEqual('c');
+      expect(state.getOutput(3)).toEqual('abc');
+      expect(state.getOutput(10)).toEqual('abc');
+      state.appendOutput(['def','ghi','j']);
+      expect(state.getOutput(2)).toEqual('ij');
+      expect(state.getOutput(10)).toEqual('abcdefghij');
+      expect(state.getOutput(11)).toEqual('abcdefghij');
+    });
+    it('handles backspaces in output', function() {
+      expect(state.getOutput(1)).toEqual('');
+      state.appendOutput(['zyx']);
+      expect(state.getOutput(3)).toEqual('zyx');
+      state.appendOutput(['\b\b\b\b\b']);
+      expect(state.getOutput(3)).toEqual('');
+      state.appendOutput(['wvut', '\b']);
+      expect(state.getOutput(1)).toEqual('u');
+      expect(state.getOutput(3)).toEqual('wvu');
+      state.appendOutput(['tsrq', '\b\b', 'rq']);
+      expect(state.getOutput(5)).toEqual('utsrq');
     });
   });
   it('sets correct defaults', function() {
@@ -132,7 +163,7 @@ describe('state.js tests', function() {
     oldState.suppressInitialSpace();
     oldState.suppressFinalSpace();
     oldState.addGlue();
-    oldState.setTerminalSpace(true);
+    oldState.appendOutput([' ']);
     expect(oldState.isCapitalized()).toBe(false);
     expect(oldState.isLowercase()).toBe(true);
     expect(oldState.isInitialSpaceSuppressed()).toBe(true);

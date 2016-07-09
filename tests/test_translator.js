@@ -90,8 +90,10 @@ describe('translator.js', function() {
       it('undo works for multistroke words', function() {
         var result = translator.lookup('PROB');
         expect(result).toEqual(['probable ']);
+        expect(translator._queue.undo).toEqual(['\b\b\b\b\b\b\b\b\b']);
         result = translator.lookup('HREPL');
         expect(result).toEqual(['\b\b\b\b\b\b\b\b\b', 'problem ']);
+        expect(translator._history._stack[translator._history._stack.length-1].undo).toEqual(['\b\b\b\b\b\b\b\b']);
         result = translator.lookup('*');
         expect(result).toEqual(['\b\b\b\b\b\b\b\b', 'probable ']);
         result = translator.lookup('*');
@@ -166,6 +168,26 @@ describe('translator.js', function() {
         result = translator.lookup('BET');
         expect(result).toEqual(['\b\b\b\b', 'tablet ']);
       });
+      it('multistroke words with undefined member translations should show split words, but leave the strokes in the queue.', function() {
+        translator._dictionary.add('EU', 'I');
+        translator._dictionary.add('EU/HROUF', 'I love you');
+        translator._dictionary.add('EU/HRUF/TPEUSZ', 'I love fish');
+        translator._dictionary.add('HRUF', 'love');
+        translator._dictionary.add('U', 'you');
+        expect(translator.lookup('EU')).toEqual(['I ']);
+        expect(translator._state.getOutput(-1)).toEqual('I ');
+        expect(translator._dictionary.lookup('EU').ambiguous).toBe(true);
+        expect(translator._queue.stroke).toEqual('EU');
+        expect(translator._queue.undo).toEqual(['\b\b']);
+        expect(translator._dictionary.lookup('EU/HRUF').ambiguous).toBe(true);
+        expect(translator.lookup('HRUF')).toEqual(['\b\b','I ','love ']);
+        expect(translator._state.getOutput(-1)).toEqual('I love ');
+        expect(translator._queue.stroke).toEqual('EU/HRUF');
+        expect(translator._queue.undo).toEqual(['\b\b\b\b\b', '\b\b']);
+        expect(translator.lookup('U')).toEqual(['\b\b\b\b\b', '\b\b', 'I ', 'love ', 'you ']);
+        expect(translator._state.getOutput(-1)).toEqual('I love you ');
+        expect(translator._queue.stroke).toEqual('');
+      });
       it('commits the queue at the right time', function() {
         translator._history.clear();
         expect(translator._history._stack.length).toBe(0);
@@ -176,6 +198,13 @@ describe('translator.js', function() {
         expect(translator._history._stack.length).toBe(1);
         translator.lookup("PB");
         expect(translator._history._stack.length).toBe(3);
+      });
+      it('handles punctuation correctly', function() {
+        var result = translator.lookup("PW");
+        expect(result).toEqual(['about ']);
+        result = translator.lookup('{.}');
+        expect(result).toEqual(['\b', '.  ']);
+        expect(translator._state.isCapitalized()).toBe(true);
       });
     });
     describe('with preceeding spaces', function() {
@@ -203,12 +232,12 @@ describe('translator.js', function() {
       expect(translator._queue.stroke).toEqual('');
     });
     it('clears history on reset', function() {
-      expect(translator._history._stack.length==0).toBe(true);
+      expect(translator._history._stack.length===0).toBe(true);
       translator.lookup("PW");
       expect(translator._queue.stroke).toEqual('');
-      expect(translator._history._stack.length==0).toBe(false);
+      expect(translator._history._stack.length===0).toBe(false);
       translator.reset();
-      expect(translator._history._stack.length==0).toBe(true);
+      expect(translator._history._stack.length===0).toBe(true);
     });
   });
 });

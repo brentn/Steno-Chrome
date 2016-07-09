@@ -13,7 +13,7 @@ describe("formatter.js tests", function() {
     formatter.spaces_before = true;
     translation.output = ["test"];
     formatter.format(translation, state);
-    expect(translation.output[0]).toEqual(' test');
+    expect(translation.output).toEqual([' test']);
     translation.output=["{ }boat and{ }"];
     formatter.format(translation, state);
     expect(translation.output).toEqual(['  boat and ']);
@@ -28,11 +28,12 @@ describe("formatter.js tests", function() {
     expect(translation.output).toEqual([' boat and  ']);
   });
   it('formats punctuation correctly', function() {
-    translation.output = ["{.}"];
+    state.appendOutput([' ']);
     expect(state.isCapitalized()).toBe(false);
     expect(state.isInitialSpaceSuppressed()).toBe(false);
+    translation.output = ["{.}"];
     formatter.format(translation, state);
-    expect(translation.output).toEqual(['.  ']);
+    expect(translation.output).toEqual(['\b', '.  ']);
     expect(state.isCapitalized()).toBe(true);
     expect(state.isInitialSpaceSuppressed()).toBe(true);
     translation.output = ["{?}"];
@@ -176,6 +177,7 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(translation.output).toEqual(['Brent ']);
     expect(state.hasGlue()).toBe(true);
+    state.appendOutput([' ']);
     translation.output = ["{&Brent}"];
     translation.undo = [];
     formatter.format(translation, state);
@@ -191,9 +193,10 @@ describe("formatter.js tests", function() {
   });
   it('handles BackSpace command', function() {
     translation.output = ["{#BackSpace}"];
+    state.appendOutput(['abcde']);
     formatter.format(translation, state);
     expect(translation.output).toEqual(['\b']);
-    expect(translation.undo).toEqual([' ']);
+    expect(translation.undo).toEqual(['e']);
   });
   it('handles Tab command', function() {
     translation.output = ["{#Tab}"];
@@ -206,5 +209,18 @@ describe("formatter.js tests", function() {
     formatter.format(translation, state);
     expect(state.isInitialSpaceSuppressed()).toBe(true);
     expect(translation.output).toEqual(['hi there']);
+  });
+  it('undoes characters correctly', function() {
+    translation.output = ['{#BackSpace}{#BackSpace}'];
+    state.appendOutput(['sponge']);
+    formatter.format(translation, state);
+    expect(translation.undo).toEqual(['ge']);
+    expect(translation.output).toEqual(['\b\b']);
+  });
+  it('handles translations that are lists', function() {
+    translation.output = ['My', 'name', 'is', 'Brent'];
+    formatter.format(translation, state);
+    expect(translation.output).toEqual(['My ','name ', 'is ', 'Brent ']);
+    expect(translation.undo).toEqual(['\b\b\b\b\b\b','\b\b\b','\b\b\b\b\b','\b\b\b']);
   });
 });
