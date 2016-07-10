@@ -1,18 +1,12 @@
-adding suffixes sometimes puts the backspace before the word, rather than the suffix
+
 comma leaves space before.
 
 space passthrough should be prevented if no control key pressed
 
 Dictionary plugin options page should close on save, and cause this to reload, if possible
 
+Capital state stays set too long
 ======================
-rework of algorithm
-
-output: list of either number of backspaces, or text
-data: state, stroke, outputs, undos 
-
-
-Formatter: format - static (formats the output and undo queues)
 
 
 

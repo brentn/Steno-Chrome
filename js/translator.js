@@ -21,7 +21,6 @@ SimpleTranslator.prototype.initialize = function() {
   loadDictionaries(this._dictionary);
   this._queue = new TranslationResult();
 };
-
 SimpleTranslator.prototype.lookup = function(stroke) {
   // returns a list of either backspaces, or text to be output in sequence
   if (stroke === undefined || stroke === null) return [];

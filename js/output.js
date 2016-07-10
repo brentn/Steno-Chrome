@@ -6,17 +6,29 @@ var Output = {
     } else {
       var output = translator.lookup(stroke);
       if (output !== undefined) {
-        for (var i=0; i < output.length; i++) {
+        var i=0;
+        var printloop = function() {
           var translation = output[i];
           if (translation.length>0 && translation[0] == '\b') {
             var num = translation.split('\b').length-1;
-            console.debug('deleting '+num+' chars');
-            chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-(num), "length": num}, null);
+            console.debug('deleting '+num+' characters');
+            chrome.input.ime.deleteSurroundingText({"engineID": engine_id, "contextID": context_id, "offset":-num, "length": num}, function() {
+              i++;
+              if (i < (output.length)) {
+                printloop();
+              }
+            });
           } else {
             console.debug('printing "'+translation+'"');
-            chrome.input.ime.commitText({"contextID": context_id, "text": translation});
+            chrome.input.ime.commitText({"contextID": context_id, "text": translation}, function() {
+              i++;
+              if (i < (output.length)) {
+                printloop();
+              }
+            });
           }
-        }
+        };
+        printloop();
       }
     }
   }
