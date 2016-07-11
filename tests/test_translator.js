@@ -4,6 +4,7 @@ describe('translator.js', function() {
     beforeEach(function() {
       translator = new LookupTranslator();
       translator.initialize();
+      translator._formatter = new SimpleFormatter();
       translator._history = new History(5);
       translator._dictionary.add('PROB', 'probable');
       translator._dictionary.add('PROB/HREPL', 'problem');
@@ -205,6 +206,9 @@ describe('translator.js', function() {
         result = translator.lookup('{.}');
         expect(result).toEqual(['\b', '.  ']);
         expect(translator._state.isCapitalized()).toBe(true);
+        result = translator.lookup('{,}');
+        expect(result).toEqual(['\b', ', ']);
+        expect(translator._state.isCapitalized()).toBe(true);
       });
     });
     describe('with preceeding spaces', function() {
@@ -240,80 +244,5 @@ describe('translator.js', function() {
       expect(translator._history._stack.length===0).toBe(true);
     });
   });
-  describe('SimpleTranslator', function() {
-    var translator;
-    beforeEach(function() {
-      translator = new SimpleTranslator();
-      translator.initialize();
-      translator._history = new History(5);
-      translator._dictionary.add('PROB', 'probable');
-      translator._dictionary.add('PROB/HREPL', 'problem');
-      translator._dictionary.add('PW', 'about');
-      translator._dictionary.add('PW*', '{about^}');
-      translator._dictionary.add('STAPBD', 'stand');
-      translator._dictionary.add('STAPBD/-G', 'standing');
-      translator._dictionary.add('S-P', '{^ ^}');
-      translator._dictionary.add('TH-PL', '{.}');
-      translator._dictionary.add('KPA', '{-|}');
-      translator._dictionary.add('-S', '{^s}');
-      translator._dictionary.add('-G', '{^ing}');
-      translator._dictionary.add('R-R', '{^}{#Return}{^}{-|}');
-    });
-    it('translates missing strokes directly', function() {
-      expect(translator.lookup('PTS')).toEqual(['PTS ']);
-      expect(translator.lookup('PAOT')).toEqual(['PAOT ']);
-    });
-    it('translates simple strokes', function() {
-      expect(translator.lookup('PW')).toEqual(['about ']);
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator._history._stack[0].undo).toEqual(['\b\b\b\b\b\b']);
-      expect(translator.lookup('PROB')).toEqual(['probable ']);
-      expect(translator._queue.isEmpty()).toBe(false);
-      expect(translator._queue.undo).toEqual(['\b\b\b\b\b\b\b\b\b']);
-      expect(translator._queue.stroke).toEqual('PROB');
-    });
-    it('translates compound strokes', function() {
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator.lookup('PROB')).toEqual(['probable ']);
-      expect(translator._queue.stroke).toEqual('PROB');
-      expect(translator._queue.undo).toEqual(['\b\b\b\b\b\b\b\b\b']);
-      expect(translator.lookup('HREPL')).toEqual(['\b\b\b\b\b\b\b\b\b','problem ']);
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator._history._stack[translator._history._stack.length-1].undo).toEqual(['\b\b\b\b\b\b\b\b']);
-    });
-    it('translates commands directly', function() {
-      expect(translator.lookup('KPA')).toEqual(['{-|} ']);
-      expect(translator.lookup('-G')).toEqual(['{^ing} ']);
-      expect(translator.lookup('-S')).toEqual(['{^s} '])
-    });
-    it('undoes simple strokes', function() {
-      expect(translator._queue.isEmpty()).toBe(true);
-      translator.lookup('PW');
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b\b\b']);
-      translator.lookup('PW');
-      translator.lookup('-S');
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b\b', '\b\b\b\b\b\b', 'about ']);
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b\b\b']);
-    });
-    it('undoes compound strokes correctly', function() {
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator.lookup('PROB')).toEqual(['probable ']);
-      expect(translator.lookup('RAO')).toEqual(['\b\b\b\b\b\b\b\b\b', 'probable ', 'RAO ']);
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b', '\b\b\b\b\b\b\b\b\b', 'probable ']);
-      expect(translator._queue.isEmpty()).toBe(false);
-      expect(translator.lookup('HREPL')).toEqual(['\b\b\b\b\b\b\b\b\b', 'problem ']);
-      expect(translator._queue.isEmpty()).toBe(true);
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b\b\b\b\b', 'probable ']);
-      expect(translator._queue.isEmpty()).toBe(false);
-      expect(translator.lookup('*')).toEqual(['\b\b\b\b\b\b\b\b\b']);
-      expect(translator._queue.isEmpty()).toBe(true);
-    });
-    it('puts spaces before words, if required', function() {
-      translator._spaces_before=true;
-      expect(translator.lookup('PW')).toEqual([' about']);
-      expect(translator.lookup('-G')).toEqual([' {^ing}']);
-    });
-  });
+
 });

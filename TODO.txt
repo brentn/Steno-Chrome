@@ -1,9 +1,8 @@
-
-comma leaves space before.
+comma,period, comma produces ", ,"
 
 space passthrough should be prevented if no control key pressed
 
-Dictionary plugin options page should close on save, and cause this to reload, if possible
+?? Dictionary plugin options page should close on save, and cause this to reload, if possible
 
 Capital state stays set too long
 ======================

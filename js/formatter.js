@@ -3,7 +3,11 @@ var Formatter = {
   format: function(translation) {}
 };
 
+var NullFormatter = function() {};
 var SimpleFormatter = function() {};
+var FullFormatter = function() {};
+
+NullFormatter.prototype = Object.create(Formatter);
 
 SimpleFormatter.prototype = Object.create(Formatter);
 SimpleFormatter.prototype.initialize = function() {
@@ -71,6 +75,7 @@ SimpleFormatter.prototype.format = function(translation, state) {
       case '{.}': state.suppressInitialSpace(); state.capitalize(); return '. ';
       case '{?}': state.suppressInitialSpace(); state.capitalize(); return '? ';
       case '{!}': state.suppressInitialSpace(); state.capitalize(); return '! ';
+      case '{,}': state.suppressInitialSpace(); return ',';
     }
     if (atom.indexOf('{^')>=0) {state.suppressInitialSpace();}
     if (atom.indexOf('^}')>=0) {state.suppressFinalSpace(); atom = atom.replace('^}', '');}
@@ -178,7 +183,7 @@ SimpleFormatter.prototype.format = function(translation, state) {
 };
 
 
-
+FullFormatter.prototype = Object.create(Formatter);
 
 
 
